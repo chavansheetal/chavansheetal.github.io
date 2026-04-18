@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { saveUser, generateAppId } from "../store";
-import { setupRecaptcha, sendOTP, verifyOTP } from "../firebase";
 import "../styles/Auth.css";
 
 const STATES = [
@@ -214,8 +213,7 @@ export default function Register({ onLogin }) {
   const [fieldErrors, setFieldErrors]   = useState({});
   const [appId]                         = useState(() => generateAppId("KA"));
   const [duplicateInfo, setDuplicateInfo] = useState(null);
-  const [confirmationResult, setConfirmationResult] = useState(null);
-  const [otpSent, setOtpSent] = useState(false);
+  const [emailOtp, setEmailOtp] = useState("");
 
   const [form, setForm] = useState({
     category: "Post-Matric",
@@ -223,11 +221,6 @@ export default function Register({ onLogin }) {
     studentCategory: "", state: "", mobile: "", email: "",
     password: "", confirmPassword: "", otp: "",
   });
-
-  // Setup reCAPTCHA on component mount
-  useEffect(() => {
-    setupRecaptcha('recaptcha-container');
-  }, []);
 
   const set = (k, v) => {
     setForm(f => ({ ...f, [k]: v }));
@@ -304,64 +297,43 @@ export default function Register({ onLogin }) {
 
     try {
       setError("Sending OTP...");
-      const phoneNumber = `+91${form.mobile}`;
-      const result = await sendOTP(phoneNumber);
-      setConfirmationResult(result);
-      setOtpSent(true);
+      // Generate email OTP for verification
+      const otp = String(Math.floor(100000 + Math.random() * 900000));
+      setEmailOtp(otp);
       setError("");
-      alert(`📱 OTP sent to +91 ${form.mobile}\n\nPlease check your SMS and enter the 6-digit code.`);
+      alert(`📧 Email OTP Sent!\n\nOTP: ${otp}\n\nTo: ${form.email}\n\nPlease enter this 6-digit code to continue registration.`);
       setStep(2);
     } catch (error) {
-      console.error("Error sending OTP:", error);
-      // Show user-friendly error messages
-      if (error.message.includes('Invalid phone number')) {
-        setError("Invalid phone number format. Please enter a valid 10-digit mobile number.");
-      } else if (error.message.includes('Too many requests')) {
-        setError("Too many OTP requests. Please wait a few minutes before trying again.");
-      } else if (error.message.includes('reCAPTCHA')) {
-        setError("Security verification failed. Please refresh the page and try again.");
-      } else {
-        setError("Failed to send OTP. Please check your internet connection and try again.");
-      }
+      console.error("Error generating OTP:", error);
+      setError("Failed to generate OTP. Please try again.");
     }
   };
 
-  const handleVerify = async () => {
+  const handleVerify = () => {
     setError("");
     if (!form.otp) { setError("Please enter the OTP."); return; }
-
-    try {
-      setError("Verifying OTP...");
-      await verifyOTP(confirmationResult, form.otp);
-
-      const userData = {
-        appId, fullName: form.fullName, dob: form.dob, gender: form.gender,
-        aadhaar: form.aadhaar, category: form.studentCategory, state: form.state,
-        mobile: form.mobile, email: form.email, password: form.password,
-        type: "Student - Fresh", scholarshipCategory: form.category,
-        registeredAt: new Date().toLocaleDateString("en-IN"),
-      };
-      saveUser(userData);
-
-      registerApplicant({ appId, aadhaar: form.aadhaar, mobile: form.mobile, email: form.email });
-
-      localStorage.setItem("nsp_registered_name",  form.fullName);
-      localStorage.setItem("nsp_registered_mobile", form.mobile);
-      localStorage.setItem("nsp_registered_email",  form.email);
-      localStorage.setItem("nsp_app_id",            appId);
-      setError("");
-      setStep(3);
-    } catch (error) {
-      console.error("Error verifying OTP:", error);
-      // Show user-friendly error messages
-      if (error.message.includes('Invalid OTP')) {
-        setError("Invalid OTP code. Please check the code and try again.");
-      } else if (error.message.includes('expired')) {
-        setError("OTP has expired. Please request a new OTP.");
-      } else {
-        setError("OTP verification failed. Please try again.");
-      }
+    if (form.otp.trim() !== emailOtp) {
+      setError("Invalid OTP. Please check the code shown in the alert and try again.");
+      return;
     }
+
+    const userData = {
+      appId, fullName: form.fullName, dob: form.dob, gender: form.gender,
+      aadhaar: form.aadhaar, category: form.studentCategory, state: form.state,
+      mobile: form.mobile, email: form.email, password: form.password,
+      type: "Student - Fresh", scholarshipCategory: form.category,
+      registeredAt: new Date().toLocaleDateString("en-IN"),
+    };
+    saveUser(userData);
+
+    registerApplicant({ appId, aadhaar: form.aadhaar, mobile: form.mobile, email: form.email });
+
+    localStorage.setItem("nsp_registered_name",  form.fullName);
+    localStorage.setItem("nsp_registered_mobile", form.mobile);
+    localStorage.setItem("nsp_registered_email",  form.email);
+    localStorage.setItem("nsp_app_id",            appId);
+    setError("");
+    setStep(3);
   };
 
   const handleGoToDashboard = () => {
@@ -786,7 +758,7 @@ export default function Register({ onLogin }) {
                               autoFocus
                             />
                             <div className="otp-hint" style={{ background: "#f0fdf4", borderColor: "#bbf7d0", color: "#166534" }}>
-                              Shielded Identity Verification
+                              📧 OTP shown in the browser alert — enter it below
                             </div>
                           </div>
                         </div>

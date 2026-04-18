@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import { getUserByMobile, getUserByAadhaar, getUserByAppId, saveUser, generateAppId } from "../store";
+import { getUserByMobile, getUserByAadhaar, getUserByAppId, getUserByEmail, saveUser, generateAppId } from "../store";
 import { setupRecaptcha, sendOTP, verifyOTP } from "../firebase";
 import "../styles/Auth.css";
 
@@ -27,6 +27,8 @@ export default function DigiLockerLogin({ onLogin }) {
   const [loading, setLoading]           = useState(false);
   const [confirmationResult, setConfirmationResult] = useState(null);
   const [loginPhone, setLoginPhone]     = useState("");
+  const [emailOtp, setEmailOtp]         = useState("");
+  const [loginEmail, setLoginEmail]     = useState("");
 
   const refreshCaptcha = () => {
     setCaptcha(generateCaptcha());
@@ -76,30 +78,23 @@ export default function DigiLockerLogin({ onLogin }) {
       return;
     }
 
-    if (!user.mobile) {
-      setError("Registered user does not have a valid mobile number.");
+    if (!user.email) {
+      setError("Registered user does not have a valid email address.");
       return;
     }
 
     setLoading(true);
     try {
-      const phoneNumber = `+91${user.mobile}`;
-      const result = await sendOTP(phoneNumber);
-      setConfirmationResult(result);
-      setLoginPhone(user.mobile);
+      // Generate random 6-digit OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      setEmailOtp(otp);
+      setLoginEmail(user.email);
+      alert(`Your OTP is: ${otp}\n\nPlease enter this code to login.`);
       setStep(2);
       setError("");
     } catch (error) {
-      console.error("Error sending DigiLocker OTP:", error);
-      if (error.message.includes("Invalid phone number")) {
-        setError("Invalid phone number format. Please use a valid Indian mobile number.");
-      } else if (error.message.includes("Too many requests")) {
-        setError("Too many OTP requests. Please wait a few minutes and try again.");
-      } else if (error.message.includes("reCAPTCHA")) {
-        setError("Security verification failed. Please refresh the page and try again.");
-      } else {
-        setError("Failed to send OTP. Please check your Firebase setup and mobile number.");
-      }
+      console.error("Error generating OTP:", error);
+      setError("Failed to generate OTP. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -111,45 +106,32 @@ export default function DigiLockerLogin({ onLogin }) {
       setError("Please enter the OTP.");
       return;
     }
-    if (!confirmationResult) {
-      setError("No OTP request found. Please request a new OTP.");
+    if (enteredOtp.trim() !== emailOtp) {
+      setError("Invalid OTP. Please check the code shown in the alert and try again.");
       return;
     }
 
     try {
-      await verifyOTP(confirmationResult, enteredOtp.trim());
+      // Find user by email
+      const user = getUserByEmail(loginEmail);
+      if (!user) {
+        setError("User not found. Please try again.");
+        return;
+      }
+
+      // Set login session
+      localStorage.setItem("nsp_logged_in", "true");
+      localStorage.setItem("nsp_user_name", user.fullName);
+      localStorage.setItem("nsp_user_mobile", user.mobile);
+      localStorage.setItem("nsp_user_email", user.email);
+      localStorage.setItem("nsp_app_id", user.appId);
+
+      setError("");
+      navigate("/dashboard");
     } catch (error) {
-      setError(error.message || "OTP verification failed. Please try again.");
-      return;
+      console.error("Error verifying OTP:", error);
+      setError("Login failed. Please try again.");
     }
-
-    let user = null;
-    if (method === "aadhaar") {
-      user = getUserByAadhaar(aadhaar.replace(/\s/g, ""));
-    } else if (method === "digi_id") {
-      const cleanId = digiId.trim();
-      user = getUserByAppId(cleanId) || getUserByAadhaar(cleanId.replace(/\s/g, "")) || getUserByMobile(cleanId);
-    } else {
-      user = getUserByMobile(mobile.trim());
-    }
-
-    if (!user) {
-      setError("Account not found.");
-      return;
-    }
-
-    localStorage.setItem("nsp_registered_name",   user.fullName);
-    localStorage.setItem("nsp_registered_mobile", user.mobile);
-
-    const sessionUser = {
-      name:   user.fullName,
-      id:     user.appId,
-      mobile: user.mobile,
-      appId:  user.appId,
-      type:   "Student",
-    };
-    onLogin(sessionUser);
-    navigate("/dashboard");
   };
 
   return (
@@ -336,8 +318,7 @@ export default function DigiLockerLogin({ onLogin }) {
               {step === 2 && (
                 <>
                   <div style={styles.successBox}>
-                    ✅ OTP sent to{" "}
-                    {loginPhone ? `+91 ${loginPhone}` : "your Aadhaar-linked mobile"}
+                    ✅ OTP sent to Email: {loginEmail}
                   </div>
 
                   <div style={styles.formGroup}>
@@ -352,7 +333,7 @@ export default function DigiLockerLogin({ onLogin }) {
                       onKeyDown={e => e.key === "Enter" && handleVerify()}
                       autoFocus
                     />
-                    <div style={styles.hint}>Check your SMS for the 6-digit OTP and enter it here.</div>
+                    <div style={styles.hint}>Check the browser alert for your OTP and enter it here.</div>
                   </div>
 
                   <button style={styles.primaryBtn} onClick={handleVerify}>
