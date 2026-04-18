@@ -283,22 +283,7 @@ export default function Login({ onLogin }) {
                 {loading ? "⏳ Verifying..." : "🔐 Login Securely"}
               </button>
 
-              <div className="or-divider">OR</div>
 
-              <Link
-                to="/digilocker-login"
-                style={{
-                  display:"flex", alignItems:"center", justifyContent:"center",
-                  gap:8, textDecoration:"none", padding:"10px 16px",
-                  border:"2px solid #003580", borderRadius:4,
-                  color:"#003580", fontWeight:600, fontSize:13,
-                  background:"white", transition:"all 0.2s",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background="#003580"; e.currentTarget.style.color="white"; }}
-                onMouseLeave={e => { e.currentTarget.style.background="white"; e.currentTarget.style.color="#003580"; }}
-              >
-                🔒 Login with Email Authentication
-              </Link>
 
               <div className="auth-footer-links" style={{marginTop:14}}>
                 <Link to="/register">New Registration?</Link>
