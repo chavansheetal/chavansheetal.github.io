@@ -771,7 +771,7 @@ export default function Register({ onLogin }) {
                         <div className="otp-lock-icon">🔐</div>
                         <h3 style={{ color: "#1e1b4b", marginBottom: 12 }}>Multi-Factor Authentication</h3>
                         <div className="alert alert-success" style={{ textAlign: "left" }}>
-                          ✅ One Time Password sent to Aadhaar-linked mobile: <strong>+91 {form.mobile}</strong>
+                          ✅ One Time Password sent to Email: <strong>{form.email}</strong>
                         </div>
                         <div className="form-group" style={{ textAlign: "left" }}>
                           <label style={{ fontWeight: 600 }}>Enter 6-digit Secure OTP *</label>
