@@ -140,6 +140,12 @@ const BLOCKED_EMAIL_DOMAINS = [
   "maildrop.cc","dispostable.com","temp-mail.org","getnada.com",
 ];
 
+function validateMobile(val) {
+  if (!val) return "Mobile Number is required.";
+  if (!/^[6-9]\d{9}$/.test(val)) return "Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.";
+  return null;
+}
+
 function validateEmail(val) {
   if (!val) return "Email address is required.";
   if (val.length > 100) return "Email address is too long.";
@@ -207,7 +213,7 @@ export default function Register({ onLogin }) {
   const [form, setForm] = useState({
     category: "Post-Matric",
     fullName: "", dob: "", gender: "", aadhaar: "",
-    studentCategory: "", state: "", email: "",
+    studentCategory: "", state: "", email: "", mobile: "",
     password: "", confirmPassword: "", otp: "",
   });
 
@@ -224,6 +230,7 @@ export default function Register({ onLogin }) {
       case "dob":       errs.dob       = validateDob(form.dob)            || ""; break;
       case "aadhaar":   errs.aadhaar   = validateAadhaar(form.aadhaar)    || ""; break;
       case "email":     errs.email     = validateEmail(form.email)        || ""; break;
+      case "mobile":    errs.mobile    = validateMobile(form.mobile)      || ""; break;
       case "password":  errs.password  = validatePassword(form.password)  || ""; break;
       case "confirmPassword":
         errs.confirmPassword = form.confirmPassword !== form.password
@@ -249,6 +256,9 @@ export default function Register({ onLogin }) {
 
     const aadhaarErr = validateAadhaar(form.aadhaar);
     if (aadhaarErr) errors.aadhaar = aadhaarErr;
+
+    const mobileErr = validateMobile(form.mobile);
+    if (mobileErr) errors.mobile = mobileErr;
 
     const emailErr = validateEmail(form.email);
     if (emailErr) errors.email = emailErr;
@@ -313,7 +323,7 @@ export default function Register({ onLogin }) {
     const userData = {
       appId, fullName: form.fullName, dob: form.dob, gender: form.gender,
       aadhaar: form.aadhaar, category: form.studentCategory, state: form.state,
-      email: form.email, password: form.password,
+      email: form.email, mobile: form.mobile, password: form.password,
       type: "Student - Fresh", scholarshipCategory: form.category,
       registeredAt: new Date().toLocaleDateString("en-IN"),
     };
@@ -338,6 +348,7 @@ export default function Register({ onLogin }) {
   const fieldLabel = (field) => ({
     aadhaar: "Aadhaar number",
     email:   "email address",
+    mobile:  "mobile number",
   }[field] || field);
 
   const FErr = ({ field }) =>
@@ -620,17 +631,32 @@ export default function Register({ onLogin }) {
                           <FErr field="state" />
                         </div>
 
-                        <div className="form-group">
-                          <label>Email ID *</label>
-                          <input
-                            type="email"
-                            placeholder="yourname@example.com"
-                            value={form.email}
-                            onChange={e => set("email", e.target.value)}
-                            onBlur={() => handleBlur("email")}
-                            style={inputStyle("email")}
-                          />
-                          <FErr field="email" />
+                        <div className="reg-row-2">
+                          <div className="form-group">
+                            <label>Mobile Number *</label>
+                            <input
+                              type="tel"
+                              placeholder="10-digit mobile number"
+                              maxLength={10}
+                              value={form.mobile}
+                              onChange={e => set("mobile", e.target.value.replace(/\D/g, ""))}
+                              onBlur={() => handleBlur("mobile")}
+                              style={inputStyle("mobile")}
+                            />
+                            <FErr field="mobile" />
+                          </div>
+                          <div className="form-group">
+                            <label>Email ID *</label>
+                            <input
+                              type="email"
+                              placeholder="yourname@example.com"
+                              value={form.email}
+                              onChange={e => set("email", e.target.value)}
+                              onBlur={() => handleBlur("email")}
+                              style={inputStyle("email")}
+                            />
+                            <FErr field="email" />
+                          </div>
                         </div>
 
                         <div className="reg-row-2">
