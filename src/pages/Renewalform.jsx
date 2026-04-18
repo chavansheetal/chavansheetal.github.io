@@ -137,7 +137,8 @@ export default function RenewalForm({ user, onLogout }) {
     // Since we verified the user, fetch their applications
     const apps = getApplications();
     const match = apps.find(a =>
-      a.appId?.toUpperCase() === loginAppId.trim().toUpperCase()
+      a.appId?.toUpperCase() === loginAppId.trim().toUpperCase() ||
+      a.userId?.toUpperCase() === loginAppId.trim().toUpperCase()
     );
 
     if (!match) {

@@ -481,7 +481,7 @@ export default function ApplicationForm({ user, onLogout }) {
 
   const handleSubmit = () => {
     if (!form.declaration) { alert("You must accept the declaration."); return; }
-    const appId = `NSP/2025/KA/${Math.floor(10000 + Math.random() * 90000)}`;
+    const appId = user?.id || user?.appId || `NSP/2025/KA/${Math.floor(10000 + Math.random() * 90000)}`;
     const today = new Date().toLocaleDateString("en-IN");
     const incomeLabel = INCOME_OPTIONS.find(o => o.value === form.annualIncome)?.label || "—";
 
