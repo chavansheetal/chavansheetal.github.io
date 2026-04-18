@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { getUserByMobile, getUserByAadhaar, getUserByAppId, saveUser, generateAppId } from "../store";
+import { setupRecaptcha, sendOTP, verifyOTP } from "../firebase";
 import "../styles/Auth.css";
 
 function generateCaptcha() {
@@ -24,14 +25,19 @@ export default function DigiLockerLogin({ onLogin }) {
   const [captchaInput, setCaptchaInput] = useState("");
   const [error, setError]               = useState("");
   const [loading, setLoading]           = useState(false);
-  const [sentOtp, setSentOtp]           = useState("");
+  const [confirmationResult, setConfirmationResult] = useState(null);
+  const [loginPhone, setLoginPhone]     = useState("");
 
   const refreshCaptcha = () => {
     setCaptcha(generateCaptcha());
     setCaptchaInput("");
   };
 
-  const handleSendOtp = () => {
+  useEffect(() => {
+    setupRecaptcha("recaptcha-container");
+  }, []);
+
+  const handleSendOtp = async () => {
     setError("");
     if (method === "aadhaar" && aadhaar.replace(/\s/g, "").length < 12) {
       setError("Please enter a valid 12-digit Aadhaar number.");
@@ -41,7 +47,7 @@ export default function DigiLockerLogin({ onLogin }) {
       setError("Please enter a valid 10-digit mobile number.");
       return;
     }
-    if (method === "digi_id" && digiId.length < 4) {
+    if (method === "digi_id" && digiId.trim().length < 4) {
       setError("Please enter a valid DigiLocker ID / Username.");
       return;
     }
@@ -70,28 +76,50 @@ export default function DigiLockerLogin({ onLogin }) {
       return;
     }
 
-    setLoading(true);
-    const code = String(Math.floor(100000 + Math.random() * 900000));
-    setSentOtp(code);
+    if (!user.mobile) {
+      setError("Registered user does not have a valid mobile number.");
+      return;
+    }
 
-    setTimeout(() => {
-      setLoading(false);
+    setLoading(true);
+    try {
+      const phoneNumber = `+91${user.mobile}`;
+      const result = await sendOTP(phoneNumber);
+      setConfirmationResult(result);
+      setLoginPhone(user.mobile);
       setStep(2);
-      const target =
-        method === "aadhaar"
-          ? `Aadhaar-linked mobile (XXXXXX${user.mobile ? user.mobile.slice(-4) : 'XXXX'})`
-          : method === "digi_id"
-            ? `DigiLocker Registered Mobile (XXXXXX${user.mobile ? user.mobile.slice(-4) : 'XXXX'})`
-            : `+91 ${mobile}`;
-      alert(`🔒 DigiLocker OTP\n\nOTP: ${code}\n\nSent to: ${target}\n\n(Demo simulation)`);
-    }, 1000);
+      setError("");
+    } catch (error) {
+      console.error("Error sending DigiLocker OTP:", error);
+      if (error.message.includes("Invalid phone number")) {
+        setError("Invalid phone number format. Please use a valid Indian mobile number.");
+      } else if (error.message.includes("Too many requests")) {
+        setError("Too many OTP requests. Please wait a few minutes and try again.");
+      } else if (error.message.includes("reCAPTCHA")) {
+        setError("Security verification failed. Please refresh the page and try again.");
+      } else {
+        setError("Failed to send OTP. Please check your Firebase setup and mobile number.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     setError("");
-    if (!enteredOtp.trim()) { setError("Please enter the OTP."); return; }
-    if (enteredOtp.trim() !== sentOtp) {
-      setError("Incorrect OTP. Check the OTP shown in the browser alert.");
+    if (!enteredOtp.trim()) {
+      setError("Please enter the OTP.");
+      return;
+    }
+    if (!confirmationResult) {
+      setError("No OTP request found. Please request a new OTP.");
+      return;
+    }
+
+    try {
+      await verifyOTP(confirmationResult, enteredOtp.trim());
+    } catch (error) {
+      setError(error.message || "OTP verification failed. Please try again.");
       return;
     }
 
@@ -207,6 +235,8 @@ export default function DigiLockerLogin({ onLogin }) {
                 ⚠️ This is a secure government portal. Unauthorized access is prohibited under IT Act 2000.
               </div>
 
+              <div id="recaptcha-container" style={{ display: "none" }} />
+
               {error && (
                 <div style={styles.errorBox}>❌ {error}</div>
               )}
@@ -307,7 +337,7 @@ export default function DigiLockerLogin({ onLogin }) {
                 <>
                   <div style={styles.successBox}>
                     ✅ OTP sent to{" "}
-                    {method === "aadhaar" ? "your Aadhaar-linked mobile" : `+91 ${mobile}`}
+                    {loginPhone ? `+91 ${loginPhone}` : "your Aadhaar-linked mobile"}
                   </div>
 
                   <div style={styles.formGroup}>
@@ -322,7 +352,7 @@ export default function DigiLockerLogin({ onLogin }) {
                       onKeyDown={e => e.key === "Enter" && handleVerify()}
                       autoFocus
                     />
-                    <div style={styles.hint}>Check the browser alert for your OTP</div>
+                    <div style={styles.hint}>Check your SMS for the 6-digit OTP and enter it here.</div>
                   </div>
 
                   <button style={styles.primaryBtn} onClick={handleVerify}>
@@ -330,12 +360,6 @@ export default function DigiLockerLogin({ onLogin }) {
                   </button>
 
                   <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
-                    <button
-                      style={styles.linkBtn}
-                      onClick={() => alert(`OTP: ${sentOtp}\n\nSent to: ${method === "aadhaar" ? "Aadhaar-linked mobile" : `+91 ${mobile}`}`)}
-                    >
-                      Show OTP again
-                    </button>
                     <button
                       style={styles.linkBtn}
                       onClick={() => { setStep(1); setEnteredOtp(""); setError(""); refreshCaptcha(); }}
