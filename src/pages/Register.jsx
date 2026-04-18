@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { saveUser, generateAppId } from "../store";
 import { sendOTPEmail } from "../emailService";
-import emailjs from '@emailjs/browser';
 import "../styles/Auth.css";
 
 const STATES = [
@@ -55,9 +54,6 @@ function checkDuplicate(aadhaar, mobile, email) {
   for (const [, record] of Object.entries(registry)) {
     if (aadhaar && record.aadhaar && record.aadhaar === aadhaar) {
       return { isDuplicate: true, field: "aadhaar", existingAppId: record.appId };
-    }
-    if (mobile && record.mobile && record.mobile === mobile) {
-      return { isDuplicate: true, field: "mobile", existingAppId: record.appId };
     }
     if (email && record.email && record.email.toLowerCase() === email.toLowerCase()) {
       return { isDuplicate: true, field: "email", existingAppId: record.appId };
@@ -216,6 +212,7 @@ export default function Register({ onLogin }) {
   const [appId]                         = useState(() => generateAppId("KA"));
   const [duplicateInfo, setDuplicateInfo] = useState(null);
   const [emailOtp, setEmailOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
 
   const [form, setForm] = useState({
     category: "Post-Matric",
@@ -236,7 +233,6 @@ export default function Register({ onLogin }) {
       case "fullName":  errs.fullName  = validateFullName(form.fullName)  || ""; break;
       case "dob":       errs.dob       = validateDob(form.dob)            || ""; break;
       case "aadhaar":   errs.aadhaar   = validateAadhaar(form.aadhaar)    || ""; break;
-      case "mobile":    errs.mobile    = validateMobile(form.mobile)      || ""; break;
       case "email":     errs.email     = validateEmail(form.email)        || ""; break;
       case "password":  errs.password  = validatePassword(form.password)  || ""; break;
       case "confirmPassword":
@@ -264,9 +260,6 @@ export default function Register({ onLogin }) {
     const aadhaarErr = validateAadhaar(form.aadhaar);
     if (aadhaarErr) errors.aadhaar = aadhaarErr;
 
-    const mobileErr = validateMobile(form.mobile);
-    if (mobileErr) errors.mobile = mobileErr;
-
     const emailErr = validateEmail(form.email);
     if (emailErr) errors.email = emailErr;
 
@@ -291,7 +284,7 @@ export default function Register({ onLogin }) {
 
     setFieldErrors({});
 
-    const dupCheck = checkDuplicate(form.aadhaar, form.mobile, form.email);
+    const dupCheck = checkDuplicate(form.aadhaar, null, form.email);
     if (dupCheck.isDuplicate) {
       setDuplicateInfo({ field: dupCheck.field, existingAppId: dupCheck.existingAppId });
       return;
@@ -310,6 +303,7 @@ export default function Register({ onLogin }) {
         return;
       }
 
+      setOtpSent(true);
       setError("");
       setStep(2);
     } catch (error) {
@@ -329,24 +323,24 @@ export default function Register({ onLogin }) {
     const userData = {
       appId, fullName: form.fullName, dob: form.dob, gender: form.gender,
       aadhaar: form.aadhaar, category: form.studentCategory, state: form.state,
-      mobile: form.mobile, email: form.email, password: form.password,
+      email: form.email, password: form.password,
       type: "Student - Fresh", scholarshipCategory: form.category,
       registeredAt: new Date().toLocaleDateString("en-IN"),
     };
     saveUser(userData);
 
-    registerApplicant({ appId, aadhaar: form.aadhaar, mobile: form.mobile, email: form.email });
+    registerApplicant({ appId, aadhaar: form.aadhaar, email: form.email });
 
     localStorage.setItem("nsp_registered_name",  form.fullName);
-    localStorage.setItem("nsp_registered_mobile", form.mobile);
     localStorage.setItem("nsp_registered_email",  form.email);
     localStorage.setItem("nsp_app_id",            appId);
+    setOtpSent(false);
     setError("");
     setStep(3);
   };
 
   const handleGoToDashboard = () => {
-    const sessionUser = { name: form.fullName, id: appId, mobile: form.mobile, appId, type: "Student" };
+    const sessionUser = { name: form.fullName, id: appId, appId, type: "Student" };
     onLogin(sessionUser);
     navigate("/dashboard");
   };
@@ -637,32 +631,17 @@ export default function Register({ onLogin }) {
                           <FErr field="state" />
                         </div>
 
-                        <div className="reg-row-2">
-                          <div className="form-group">
-                            <label>Mobile No. (Linked to Aadhaar) *</label>
-                            <input
-                              type="tel"
-                              placeholder="10-digit mobile (starts 6–9)"
-                              maxLength={10}
-                              value={form.mobile}
-                              onChange={e => set("mobile", e.target.value.replace(/\D/g, ""))}
-                              onBlur={() => handleBlur("mobile")}
-                              style={inputStyle("mobile")}
-                            />
-                            <FErr field="mobile" />
-                          </div>
-                          <div className="form-group">
-                            <label>Email ID *</label>
-                            <input
-                              type="email"
-                              placeholder="yourname@example.com"
-                              value={form.email}
-                              onChange={e => set("email", e.target.value)}
-                              onBlur={() => handleBlur("email")}
-                              style={inputStyle("email")}
-                            />
-                            <FErr field="email" />
-                          </div>
+                        <div className="form-group">
+                          <label>Email ID *</label>
+                          <input
+                            type="email"
+                            placeholder="yourname@example.com"
+                            value={form.email}
+                            onChange={e => set("email", e.target.value)}
+                            onBlur={() => handleBlur("email")}
+                            style={inputStyle("email")}
+                          />
+                          <FErr field="email" />
                         </div>
 
                         <div className="reg-row-2">
@@ -797,7 +776,6 @@ export default function Register({ onLogin }) {
                         <div style={{ background: "#F8FAFF", border: "1px solid #b3d4ff", borderRadius: 8, padding: "16px 20px", marginBottom: 16 }}>
                           <div style={{ fontSize: 13, lineHeight: 2 }}>
                             <div>🪪 <strong>Application ID:</strong> <span style={{ color: "#003580", fontWeight: 700, fontFamily: "monospace" }}>{appId}</span></div>
-                            <div>📱 <strong>Mobile:</strong> +91 {form.mobile}</div>
                             <div>📧 <strong>Email:</strong> {form.email}</div>
                             <div>🔐 <strong>Password:</strong> Use the password you just created</div>
                           </div>
@@ -824,8 +802,6 @@ export default function Register({ onLogin }) {
       </div>
 
       <Footer />
-      {/* reCAPTCHA container */}
-      <div id="recaptcha-container"></div>
     </div>
   );
 }

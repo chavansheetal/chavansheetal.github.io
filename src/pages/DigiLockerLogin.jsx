@@ -1,11 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import { getUserByMobile, getUserByAadhaar, getUserByAppId, getUserByEmail, saveUser, generateAppId } from "../store";
-import { setupRecaptcha, sendOTP, verifyOTP } from "../firebase";
+import { getUserByAadhaar, getUserByAppId, getUserByEmail } from "../store";
 import { sendOTPEmail } from "../emailService";
-import emailjs from '@emailjs/browser';
 import "../styles/Auth.css";
 
 function generateCaptcha() {
@@ -17,9 +15,8 @@ function generateCaptcha() {
 
 export default function DigiLockerLogin({ onLogin }) {
   const navigate = useNavigate();
-  const [method, setMethod]             = useState("aadhaar");
+  const [method, setMethod]             = useState("email");
   const [aadhaar, setAadhaar]           = useState("");
-  const [mobile, setMobile]             = useState("");
   const [digiId, setDigiId]             = useState("");
   const [step, setStep]                 = useState(1);
   const [enteredOtp, setEnteredOtp]     = useState("");
@@ -27,8 +24,6 @@ export default function DigiLockerLogin({ onLogin }) {
   const [captchaInput, setCaptchaInput] = useState("");
   const [error, setError]               = useState("");
   const [loading, setLoading]           = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState(null);
-  const [loginPhone, setLoginPhone]     = useState("");
   const [emailOtp, setEmailOtp]         = useState("");
   const [loginEmail, setLoginEmail]     = useState("");
 
@@ -37,18 +32,14 @@ export default function DigiLockerLogin({ onLogin }) {
     setCaptchaInput("");
   };
 
-  useEffect(() => {
-    setupRecaptcha("recaptcha-container");
-  }, []);
-
   const handleSendOtp = async () => {
     setError("");
-    if (method === "aadhaar" && aadhaar.replace(/\s/g, "").length < 12) {
-      setError("Please enter a valid 12-digit Aadhaar number.");
+    if (method === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(digiId.trim())) {
+      setError("Please enter a valid registered email address.");
       return;
     }
-    if (method === "mobile" && mobile.length < 10) {
-      setError("Please enter a valid 10-digit mobile number.");
+    if (method === "aadhaar" && aadhaar.replace(/\s/g, "").length < 12) {
+      setError("Please enter a valid 12-digit Aadhaar number.");
       return;
     }
     if (method === "digi_id" && digiId.trim().length < 4) {
@@ -67,11 +58,11 @@ export default function DigiLockerLogin({ onLogin }) {
     let user = null;
     if (method === "aadhaar") {
       user = getUserByAadhaar(aadhaar.replace(/\s/g, ""));
+    } else if (method === "email") {
+      user = getUserByEmail(digiId.trim());
     } else if (method === "digi_id") {
       const cleanId = digiId.trim();
-      user = getUserByAppId(cleanId) || getUserByAadhaar(cleanId.replace(/\s/g, "")) || getUserByMobile(cleanId);
-    } else {
-      user = getUserByMobile(mobile.trim());
+      user = getUserByAppId(cleanId) || getUserByAadhaar(cleanId.replace(/\s/g, ""));
     }
 
     if (!user) {
@@ -131,7 +122,7 @@ export default function DigiLockerLogin({ onLogin }) {
       // Set login session
       localStorage.setItem("nsp_logged_in", "true");
       localStorage.setItem("nsp_user_name", user.fullName);
-      localStorage.setItem("nsp_user_mobile", user.mobile);
+      localStorage.setItem("nsp_user_mobile", user.mobile || "");
       localStorage.setItem("nsp_user_email", user.email);
       localStorage.setItem("nsp_app_id", user.appId);
 
@@ -157,7 +148,7 @@ export default function DigiLockerLogin({ onLogin }) {
             <span style={{ fontSize: 36 }}>🔒</span>
           </div>
 
-          <h2 style={styles.leftTitle}>DigiLocker / Aadhaar Login</h2>
+          <h2 style={styles.leftTitle}>Email Authentication Login</h2>
           <p style={styles.leftSubtitle}>
             Secure login via Government of India DigiLocker
           </p>
@@ -169,7 +160,7 @@ export default function DigiLockerLogin({ onLogin }) {
               { icon: "🪪", text: "Verify identity via Aadhaar" },
               { icon: "📄", text: "Access govt-issued documents" },
               { icon: "🔐", text: "Login without a password" },
-              { icon: "✅", text: "One-click OTP authentication" },
+              { icon: "📧", text: "Authenticate securely using email OTP" },
             ].map(({ icon, text }) => (
               <div key={text} style={styles.leftFeatureRow}>
                 <div style={styles.featureIcon}>{icon}</div>
@@ -183,7 +174,7 @@ export default function DigiLockerLogin({ onLogin }) {
             <p style={styles.prereqTitle}>📝 Prerequisites for DigiLocker Login:</p>
             <ul style={styles.prereqList}>
               <li>A <strong>DigiLocker account</strong></li>
-              <li><strong>Registered mobile</strong> OR <strong>Aadhaar</strong> OR <strong>DigiLocker ID</strong></li>
+              <li><strong>Registered email address</strong> OR <strong>Aadhaar</strong> OR <strong>Application ID</strong></li>
               <li><strong>OTP</strong> for verification</li>
             </ul>
             <p style={styles.prereqNote}>🔐 Your data is securely encrypted. We only verify your identity.</p>
@@ -226,8 +217,6 @@ export default function DigiLockerLogin({ onLogin }) {
                 ⚠️ This is a secure government portal. Unauthorized access is prohibited under IT Act 2000.
               </div>
 
-              <div id="recaptcha-container" style={{ display: "none" }} />
-
               {error && (
                 <div style={styles.errorBox}>❌ {error}</div>
               )}
@@ -238,19 +227,34 @@ export default function DigiLockerLogin({ onLogin }) {
                   {/* Method tabs */}
                   <div style={styles.tabs}>
                     {[
+                      { key: "email", label: "📧 Email" },
                       { key: "aadhaar", label: "🪪 Aadhaar" },
-                      { key: "mobile",  label: "📱 Mobile"  },
                       { key: "digi_id", label: "👤 ID/User" },
                     ].map(({ key, label }) => (
                       <button
                         key={key}
                         style={{ ...styles.tabBtn, ...(method === key ? styles.tabBtnActive : {}) }}
-                        onClick={() => { setMethod(key); setError(""); setAadhaar(""); setMobile(""); setDigiId(""); }}
+                        onClick={() => { setMethod(key); setError(""); setAadhaar(""); setDigiId(""); }}
                       >
                         {label}
                       </button>
                     ))}
                   </div>
+
+                  {method === "email" && (
+                    <div style={styles.formGroup}>
+                      <label style={styles.label}>REGISTERED EMAIL *</label>
+                      <input
+                        style={styles.input}
+                        type="email"
+                        placeholder="Enter your registered email address"
+                        value={digiId}
+                        onChange={e => setDigiId(e.target.value)}
+                        autoFocus
+                      />
+                      <div style={styles.hint}>OTP will be sent to this email address</div>
+                    </div>
+                  )}
 
                   {method === "aadhaar" && (
                     <div style={styles.formGroup}>
@@ -264,22 +268,7 @@ export default function DigiLockerLogin({ onLogin }) {
                         onChange={e => setAadhaar(e.target.value.replace(/\D/g, ""))}
                         autoFocus
                       />
-                      <div style={styles.hint}>OTP will be sent to your Aadhaar-linked mobile number</div>
-                    </div>
-                  )}
-
-                  {method === "mobile" && (
-                    <div style={styles.formGroup}>
-                      <label style={styles.label}>DIGILOCKER REGISTERED MOBILE *</label>
-                      <input
-                        style={styles.input}
-                        type="tel"
-                        placeholder="Enter 10-digit mobile number"
-                        maxLength={10}
-                        value={mobile}
-                        onChange={e => setMobile(e.target.value.replace(/\D/g, ""))}
-                        autoFocus
-                      />
+                      <div style={styles.hint}>OTP will be sent to your registered email address</div>
                     </div>
                   )}
 
@@ -318,7 +307,7 @@ export default function DigiLockerLogin({ onLogin }) {
                     onClick={handleSendOtp}
                     disabled={loading}
                   >
-                    {loading ? "⏳ Connecting to DigiLocker..." : "🔒 Send Aadhaar OTP"}
+                    {loading ? "⏳ Connecting to DigiLocker..." : "🔒 Send Email OTP"}
                   </button>
                 </>
               )}

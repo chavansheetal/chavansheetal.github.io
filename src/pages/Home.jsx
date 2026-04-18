@@ -381,7 +381,7 @@ export default function Home({ user, onLogout }) {
         </div>
         <div className="steps-row">
           {[
-            { icon: "📝", num: "1", title: "Register on USP",   desc: "Create your account using your Aadhaar number, mobile OTP, and basic academic details." },
+            { icon: "📝", num: "1", title: "Register on USP",   desc: "Create your account using your Aadhaar number, email OTP, and basic academic details." },
             { icon: "🔍", num: "2", title: "Check Eligibility", desc: "Enter your category, income, marks, and course level to see which scholarships you qualify for." },
             { icon: "📁", num: "3", title: "Upload Documents",  desc: "Upload mark sheets, income certificate, caste certificate, and bank passbook via DigiLocker." },
             { icon: "💰", num: "4", title: "Receive Amount",    desc: "After institute and ministry verification, scholarship amount is directly credited to your bank account." },

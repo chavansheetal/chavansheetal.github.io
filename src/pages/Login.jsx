@@ -298,7 +298,7 @@ export default function Login({ onLogin }) {
                 onMouseEnter={e => { e.currentTarget.style.background="#003580"; e.currentTarget.style.color="white"; }}
                 onMouseLeave={e => { e.currentTarget.style.background="white"; e.currentTarget.style.color="#003580"; }}
               >
-                🔒 Login with DigiLocker / Aadhaar OTP
+                🔒 Login with Email Authentication
               </Link>
 
               <div className="auth-footer-links" style={{marginTop:14}}>
