@@ -211,6 +211,7 @@ export default function Register({ onLogin }) {
   const [otpSent, setOtpSent] = useState(false);
 
   const [form, setForm] = useState({
+    applicationType: "Fresh",
     category: "Post-Matric",
     fullName: "", dob: "", gender: "", aadhaar: "",
     studentCategory: "", state: "", email: "", mobile: "",
@@ -324,7 +325,7 @@ export default function Register({ onLogin }) {
       appId, fullName: form.fullName, dob: form.dob, gender: form.gender,
       aadhaar: form.aadhaar, category: form.studentCategory, state: form.state,
       email: form.email, mobile: form.mobile, password: form.password,
-      type: "Student - Fresh", scholarshipCategory: form.category,
+      type: `Student - ${form.applicationType}`, scholarshipCategory: form.category,
       registeredAt: new Date().toLocaleDateString("en-IN"),
     };
     saveUser(userData);
@@ -537,6 +538,27 @@ export default function Register({ onLogin }) {
                     {/* ══ STEP 1 ══ */}
                     {step === 1 && (
                       <>
+                        <div className="form-group">
+                          <label>Application Type *</label>
+                          <select value={form.applicationType} onChange={e => set("applicationType", e.target.value)}>
+                            <option>Fresh</option>
+                            <option>Renewal</option>
+                          </select>
+                        </div>
+
+                        {form.applicationType === "Renewal" && (
+                          <div style={{
+                            background: "#EFF6FF", border: "1px solid #93c5fd", borderRadius: 8,
+                            padding: "12px 16px", marginBottom: 18, fontSize: 13, color: "#1d4ed8"
+                          }}>
+                            ℹ️ <strong>Renewal Scholarship:</strong> You do not need to register again! Please{" "}
+                            <Link to="/renewal" style={{ color: "#1e3a8a", fontWeight: "bold", textDecoration: "underline" }}>
+                              Login with your Previous Applications ID
+                            </Link>{" "}
+                            to apply for renewal.
+                          </div>
+                        )}
+
                         <div className="form-group">
                           <label>Scholarship Category</label>
                           <select value={form.category} onChange={e => set("category", e.target.value)}>

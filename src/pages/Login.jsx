@@ -280,6 +280,7 @@ export default function Login({ onLogin }) {
 
               <div className="auth-footer-links" style={{marginTop:14}}>
                 <Link to="/register">New Registration?</Link>
+                <Link to="/renewal" style={{ color: "#003580", fontWeight: 600 }}>Apply for Renewal?</Link>
                 <Link to="/forgot-password">Forgot Password?</Link>
               </div>
 

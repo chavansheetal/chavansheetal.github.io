@@ -18,10 +18,10 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ForgotPassword from "./pages/ForgotPassword";
 import DigiLockerLogin from "./pages/DigiLockerLogin";
 
-// ── FIXED: Added About Import ────────────────────────────────────────
 import About from "./pages/AboutNSP";       
 import Contact from "./pages/ContactUs";   
 import FAQs from "./pages/FAQs";
+import RenewalForm from "./pages/Renewalform";
 
 import "./App.css";
 
@@ -83,6 +83,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/faqs" element={<FAQs />} />
+          <Route path="/renewal" element={<RenewalForm user={user} onLogout={handleLogout} />} />
 
           {/* ── Student (protected) ── */}
           <Route path="/dashboard" element={user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} />
