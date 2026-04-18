@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import StudentSidebar from "./StudentSidebar";
-import { getApplicationsByUser, saveRenewal } from "../store";
+import { getApplicationsByUser, getApplications, getUserByAppId, saveRenewal } from "../store";
 import "../styles/Dashboard.css";
 import "../styles/ApplicationForm.css";
 
@@ -117,12 +117,31 @@ export default function RenewalForm({ user, onLogout }) {
   // Login & verify for renewal (if coming from renewal login page directly)
   const handleRenewalLogin = () => {
     setLoginError("");
-    const apps = getApplicationsByUser(user);
+
+    if (!loginAppId || !loginPassword) {
+      setLoginError("Please enter both Application ID and Password.");
+      return;
+    }
+
+    const matchedUser = getUserByAppId(loginAppId.trim());
+    if (!matchedUser) {
+      setLoginError("No account found with this Application ID.");
+      return;
+    }
+
+    if (matchedUser.password !== loginPassword) {
+      setLoginError("Incorrect password. Please try again.");
+      return;
+    }
+
+    // Since we verified the user, fetch their applications
+    const apps = getApplications();
     const match = apps.find(a =>
       a.appId?.toUpperCase() === loginAppId.trim().toUpperCase()
     );
+
     if (!match) {
-      setLoginError("No application found with this Application ID for your account.");
+      setLoginError("Account verified, but no previous application was found to renew.");
       return;
     }
     setExistingApp(match);
