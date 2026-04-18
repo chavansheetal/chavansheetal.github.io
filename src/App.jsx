@@ -1,5 +1,5 @@
 import { useState, useEffect, Component } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { initStore } from "./store";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
