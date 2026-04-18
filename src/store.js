@@ -96,6 +96,38 @@ export function saveApplication(app) {
   localStorage.setItem(STORE_KEYS.APPLICATIONS, JSON.stringify(apps));
 }
 
+export function saveRenewal(appId, updates) {
+  const apps = getApplications();
+  const idx = apps.findIndex(a => a.appId === appId);
+  if (idx >= 0) {
+    const existing = apps[idx];
+    apps[idx] = {
+      ...existing,
+      status: "Renewal Submitted",
+      updatedAt: new Date().toLocaleDateString("en-IN"),
+      academicDetails: updates.academicDetails || existing.academicDetails,
+      bankDetails: updates.bankDetails || existing.bankDetails,
+      renewalDetails: {
+        academicYear: updates.renewalAcademicYear,
+        promotedToYear: updates.promotedToYear,
+        lastYearMarks: updates.lastYearMarks,
+        remarks: updates.remarks,
+        files: updates.files,
+      },
+      timeline: [
+        { step: "Renewal Submitted", date: new Date().toLocaleDateString("en-IN"), done: true },
+        { step: "Institute Verification", date: "Pending", done: false },
+        { step: "State NOC", date: "—", done: false },
+        { step: "Ministry Approval", date: "—", done: false },
+        { step: "Amount Credited", date: "—", done: false },
+      ]
+    };
+    localStorage.setItem(STORE_KEYS.APPLICATIONS, JSON.stringify(apps));
+    return true;
+  }
+  return false;
+}
+
 // ✅ FIXED: match by appId, mobile, or id — all possible userId formats
 export function getApplicationsByUser(user) {
   if (!user) return [];
