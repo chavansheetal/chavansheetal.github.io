@@ -263,7 +263,7 @@ export default function ApplicationForm({ user, onLogout }) {
     // ── Shared academic fields ──
     instituteName: "", marks: "", boardUniv: "",
     // ── College-specific ──
-    course: "", year: "", specialisation: "", courseDuration: "", academicYear: "",
+    course: "", year: "", specialisation: "", courseDuration: "", courseDurationOther: "", academicYear: "",
     // ── School-specific ──
     schoolClass: "", stream: "", lastExamClass: "", gradingSystem: "", schoolState: "", schoolAcademicYear: "",
     // ── Bank ──
@@ -284,7 +284,7 @@ export default function ApplicationForm({ user, onLogout }) {
     setForm(f => ({
       ...f,
       instituteName: "", marks: "", boardUniv: "",
-      course: "", year: "", specialisation: "", courseDuration: "", academicYear: "",
+      course: "", year: "", specialisation: "", courseDuration: "", courseDurationOther: "", academicYear: "",
       schoolClass: "", stream: "", lastExamClass: "", gradingSystem: "", schoolState: "", schoolAcademicYear: "",
     }));
   };
@@ -408,6 +408,9 @@ export default function ApplicationForm({ user, onLogout }) {
         if (!form.year) { newErrors.year = true; missingErrors.push("- Select Year of Study"); }
         if (!form.boardUniv || form.boardUniv.length < 2) { newErrors.boardUniv = true; missingErrors.push("- University / Board is required"); }
         if (!form.courseDuration) { newErrors.courseDuration = true; missingErrors.push("- Select Course Duration"); }
+        if (form.courseDuration === "Other" && (!form.courseDurationOther || form.courseDurationOther.length < 2)) {
+          newErrors.courseDurationOther = true; missingErrors.push("- Specify 'Other' Course Duration"); 
+        }
         if (!form.academicYear || form.academicYear.length < 4) { newErrors.academicYear = true; missingErrors.push("- Academic Year is required"); }
         if (!form.gradingSystem) { newErrors.gradingSystem = true; missingErrors.push("- Select Grading System"); }
 
@@ -493,7 +496,7 @@ export default function ApplicationForm({ user, onLogout }) {
           marks: form.marks,
           gradingSystem: form.gradingSystem,
           boardUniv: form.boardUniv,
-          courseDuration: form.courseDuration,
+          courseDuration: form.courseDuration === "Other" ? form.courseDurationOther : form.courseDuration,
           academicYear: form.academicYear,
         }
       : {
@@ -905,11 +908,23 @@ export default function ApplicationForm({ user, onLogout }) {
                         <select style={errorStyle("courseDuration")} value={form.courseDuration} onChange={e => set("courseDuration", e.target.value)}>
                           <option value="">-- Select --</option>
                           <option>2 years (Diploma)</option>
+                          <option>2 years (PG / Masters)</option>
                           <option>3 years (UG)</option>
                           <option>4 years (UG / B.Tech)</option>
                           <option>5 years (Integrated)</option>
                           <option>Other</option>
                         </select>
+                        {form.courseDuration === "Other" && (
+                          <div style={{ marginTop: 8 }}>
+                            <input
+                              style={errorStyle("courseDurationOther")}
+                              type="text"
+                              placeholder="E.g. 1 Year (PG Diploma) or PhD"
+                              value={form.courseDurationOther}
+                              onChange={e => set("courseDurationOther", e.target.value)}
+                            />
+                          </div>
+                        )}
                       </div>
                       <div className="form-group">
                         <label>Academic Year *</label>
