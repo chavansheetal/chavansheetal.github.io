@@ -1,37 +1,35 @@
-// Free alternative (Firebase-free): Web3Forms
-// Configure in .env as VITE_WEB3FORMS_ACCESS_KEY=your_access_key
-const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit";
-const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || "";
+import emailjs from '@emailjs/browser';
+
+// To use EmailJS to send real OTPs, replace these with your actual credentials
+// from https://www.emailjs.com/
+const EMAILJS_SERVICE_ID = "service_f3ty4o2";
+const EMAILJS_TEMPLATE_ID = "template_u4k9jgb";
+const EMAILJS_PUBLIC_KEY = "1y4jxFdYPVIlt-gaL";
 
 export const sendOTPEmail = async (email, otp) => {
-  // Demo fallback when no provider key is configured.
-  if (!WEB3FORMS_ACCESS_KEY) {
-    console.warn("Web3Forms access key not configured. Using demo OTP alert.");
-    alert(`📧 OTP sent to registered email id\n\nOTP: ${otp}\n\nEmail: ${email}\n\nSet VITE_WEB3FORMS_ACCESS_KEY to send real emails.`);
+  // Demo fallback when no provider keys are configured
+  if (EMAILJS_SERVICE_ID !== "service_f3ty4o2") {
+    console.warn("EmailJS not configured yet. Using demo OTP alert.");
+    alert(`📧 [DEMO OTP ALERT]\nSent to: ${email}\nOTP: ${otp}\n\n(Configure EmailJS credentials in emailService.js to send real emails)`);
     return { success: true };
   }
 
   try {
-    const response = await fetch(WEB3FORMS_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({
-        access_key: WEB3FORMS_ACCESS_KEY,
-        subject: "Your NSP Scholar OTP Code",
-        from_name: "NSP Scholar OTP",
-        email,
-        message: `Your OTP code is ${otp}. It is valid for a short time. Do not share this code.`,
-      }),
-    });
+    const response = await emailjs.send(
+      EMAILJS_SERVICE_ID,
+      EMAILJS_TEMPLATE_ID,
+      {
+        email: email,
+        otp_message: `Your verification OTP is: ${otp}`,
+        reply_to: "chavansheetal0908@gmail.com"
+      },
+      EMAILJS_PUBLIC_KEY
+    );
 
-    const data = await response.json();
-    if (!response.ok || !data.success) {
-      throw new Error(data.message || "Failed to send OTP email");
-    }
-
-    return { success: true, response: data };
+    console.log("Email successfully sent!", response.status, response.text);
+    return { success: true, response };
   } catch (error) {
-    console.error("Web3Forms email error:", error);
+    console.error("EmailJS error:", error);
     return { success: false, error };
   }
 };

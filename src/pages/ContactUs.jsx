@@ -20,16 +20,16 @@ export default function ContactUs({ user, onLogout }) {
   });
 
   const [checkInput, setCheckInput] = useState("");
-  const [replies, setReplies]       = useState(null);
-  const [checkErr, setCheckErr]     = useState("");
+  const [replies, setReplies] = useState(null);
+  const [checkErr, setCheckErr] = useState("");
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const validate = () => {
     const e = {};
-    if (!form.name.trim())    e.name    = "Full name is required.";
-    if (!form.email.trim())   e.email   = "Email is required.";
-    if (!form.subject)        e.subject = "Please select a subject.";
+    if (!form.name.trim()) e.name = "Full name is required.";
+    if (!form.email.trim()) e.email = "Email is required.";
+    if (!form.subject) e.subject = "Please select a subject.";
     if (!form.message.trim()) e.message = "Message cannot be empty.";
     if (form.mobile && !/^\d{10}$/.test(form.mobile))
       e.mobile = "Enter a valid 10-digit mobile number.";
@@ -42,17 +42,18 @@ export default function ContactUs({ user, onLogout }) {
     const id = generateGrievanceId();
     saveGrievance({
       id,
-      fullName:      form.name.trim(),
-      mobile:        form.mobile.trim(),
-      email:         form.email.trim(),
-      subject:       form.subject,
-      message:       form.message.trim(),
+      fullName: form.name.trim(),
+      mobile: form.mobile.trim(),
+      email: form.email.trim(),
+      subject: form.subject,
+      message: form.message.trim(),
       applicationId: form.applicationId.trim(),
-      status:        "Open",
-      adminReply:    "",
-      repliedAt:     "",
-      submittedAt:   new Date().toLocaleString("en-IN"),
+      status: "Open",
+      adminReply: "",
+      repliedAt: "",
+      submittedAt: new Date().toLocaleString("en-IN"),
     });
+
     setTicketId(id);
     setSubmitted(true);
     setErrors({});
@@ -77,9 +78,9 @@ export default function ContactUs({ user, onLogout }) {
   };
 
   const statusStyle = (s) => {
-    if (s === "Resolved")    return { background: "#F0FFF4", color: "#166534", border: "1px solid #4ade80" };
+    if (s === "Resolved") return { background: "#F0FFF4", color: "#166534", border: "1px solid #4ade80" };
     if (s === "In Progress") return { background: "#FFFBEB", color: "#92400e", border: "1px solid #fbbf24" };
-    return                          { background: "#EFF6FF", color: "#1e40af", border: "1px solid #60a5fa" };
+    return { background: "#EFF6FF", color: "#1e40af", border: "1px solid #60a5fa" };
   };
 
   const inp = (hasErr) => ({
@@ -109,7 +110,7 @@ export default function ContactUs({ user, onLogout }) {
             <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
               {[
                 { key: "submit", label: "📩 Submit a Query" },
-                { key: "check",  label: "🔍 Check Reply Status" },
+                { key: "check", label: "🔍 Check Reply Status" },
               ].map(t => (
                 <button key={t.key}
                   onClick={() => { setTab(t.key); setSubmitted(false); setErrors({}); }}
@@ -117,8 +118,8 @@ export default function ContactUs({ user, onLogout }) {
                     padding: "9px 20px", borderRadius: 6, fontWeight: 600,
                     fontSize: 13, cursor: "pointer", border: "none",
                     background: tab === t.key ? "#003580" : "#fff",
-                    color:      tab === t.key ? "#fff"    : "#003580",
-                    boxShadow:  tab === t.key
+                    color: tab === t.key ? "#fff" : "#003580",
+                    boxShadow: tab === t.key
                       ? "0 2px 8px rgba(0,53,128,0.2)"
                       : "0 1px 3px rgba(0,0,0,0.08)",
                   }}
@@ -160,9 +161,9 @@ export default function ContactUs({ user, onLogout }) {
                     <select style={inp(errors.subject)} value={form.subject}
                       onChange={e => set("subject", e.target.value)}>
                       <option value="">-- Select Subject --</option>
-                      {["Application Status Query","Login / Registration Issue",
-                        "Document Upload Problem","Scholarship Amount Not Received",
-                        "Institute Verification Pending","Aadhaar / DigiLocker Issue","Other"
+                      {["Application Status Query", "Login / Registration Issue",
+                        "Document Upload Problem", "Scholarship Amount Not Received",
+                        "Institute Verification Pending", "Aadhaar / DigiLocker Issue", "Other"
                       ].map(s => <option key={s}>{s}</option>)}
                     </select>
                     {errors.subject && <div style={{ color: "#dc2626", fontSize: 12, marginTop: 3 }}>{errors.subject}</div>}
@@ -268,8 +269,10 @@ export default function ContactUs({ user, onLogout }) {
                         <div style={{ fontWeight: 600, color: "#003580", marginBottom: 6, fontSize: 14 }}>
                           📌 {g.subject}
                         </div>
-                        <div style={{ fontSize: 13, color: "#555", lineHeight: 1.6, marginBottom: 12,
-                          background: "#f8fafc", padding: "10px 12px", borderRadius: 6, border: "1px solid #e2e8f0" }}>
+                        <div style={{
+                          fontSize: 13, color: "#555", lineHeight: 1.6, marginBottom: 12,
+                          background: "#f8fafc", padding: "10px 12px", borderRadius: 6, border: "1px solid #e2e8f0"
+                        }}>
                           <strong style={{ fontSize: 11, color: "#94a3b8", display: "block", marginBottom: 4 }}>YOUR MESSAGE</strong>
                           {g.message}
                         </div>
@@ -305,25 +308,25 @@ export default function ContactUs({ user, onLogout }) {
               {
                 head: "📞 Helpline Numbers", color: "#003580",
                 items: [
-                  { label: "USP Helpdesk",          val: "0120-6619540" },
-                  { label: "DigiLocker / CDAC",      val: "1800-3010-3333" },
-                  { label: "Scholarship Grievance",  val: "1800-11-8002" },
+                  { label: "USP Helpdesk", val: "0120-6619540" },
+                  { label: "DigiLocker / CDAC", val: "1800-3010-3333" },
+                  { label: "Scholarship Grievance", val: "1800-11-8002" },
                 ]
               },
               {
                 head: "📧 Email Support", color: "#138808",
                 items: [
-                  { label: "General Queries",  val: "helpdesk@nsp.gov.in" },
+                  { label: "General Queries", val: "helpdesk@nsp.gov.in" },
                   { label: "Technical Issues", val: "support.nsp@gov.in" },
-                  { label: "Grievances",       val: "grievance.nsp@gov.in" },
+                  { label: "Grievances", val: "grievance.nsp@gov.in" },
                 ]
               },
               {
                 head: "🕐 Working Hours", color: "#FF9933",
                 items: [
-                  { label: "Mon – Fri",          val: "9:30 AM – 6:00 PM" },
-                  { label: "Saturday",           val: "9:30 AM – 2:00 PM" },
-                  { label: "Sunday & Holidays",  val: "Closed" },
+                  { label: "Mon – Fri", val: "9:30 AM – 6:00 PM" },
+                  { label: "Saturday", val: "9:30 AM – 2:00 PM" },
+                  { label: "Sunday & Holidays", val: "Closed" },
                 ]
               },
             ].map((box, i) => (
