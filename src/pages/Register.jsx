@@ -347,7 +347,7 @@ export default function Register({ onLogin }) {
 
   const fieldLabel = (field) => ({
     aadhaar: "Aadhaar number",
-    mobile:  "mobile number (Aadhaar-linked)",
+    mobile:  "mobile number",
     email:   "email address",
   }[field] || field);
 
