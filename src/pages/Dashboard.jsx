@@ -23,6 +23,24 @@ function parseAmount(str = "") {
   return parseInt(str.replace(/[₹,\s]/g, "")) || 0;
 }
 
+function getRecommendedScholarship(user) {
+  if (!user || !user.scholarshipCategory) return "";
+  const type = user.scholarshipCategory;
+  const cat = user.category;
+
+  if (type === "Pre-Matric (Class 1-8)") return "Pre-Matric Minority (Class 1-8) — ₹10,000/yr";
+  if (type === "Pre-Matric (Class 9-10)") return "Pre-Matric Minority (Class 9-10) — ₹13,500/yr";
+  if (type === "Top Class Education") return "Top Class Education (SC) — Full Tuition";
+
+  if (type === "Post-Matric") {
+      if (cat === "SC") return "Post-Matric Scholarship (SC) — ₹23,400/yr";
+      if (cat === "ST") return "Post-Matric Scholarship (ST) — ₹23,400/yr";
+      if (cat === "Minority") return "Post-Matric Minority — ₹17,000/yr";
+      return "Central Sector Scheme (CSSS) — ₹20,000/yr"; // Default for Post-Matric
+  }
+  return "";
+}
+
 export default function Dashboard({ user, onLogout }) {
   const navigate = useNavigate();
   const [apps, setApps] = useState([]);
@@ -121,7 +139,7 @@ export default function Dashboard({ user, onLogout }) {
               <h2>Welcome , {user?.name || "Student"} 👋</h2>
               <p>Application ID: <strong>{displayAppId}</strong> &nbsp;|&nbsp; Academic Year: 2025-26</p>
             </div>
-            <Link to="/application-form" className="btn-apply-now">+ Apply for Scholarship</Link>
+            <Link to="/application-form" state={{ scholarshipName: getRecommendedScholarship(user) }} className="btn-apply-now">+ Apply for Scholarship</Link>
           </div>
 
           {/* Live indicator */}
@@ -197,7 +215,7 @@ export default function Dashboard({ user, onLogout }) {
                 <div className="dash-empty-icon">📭</div>
                 <h4>No applications yet</h4>
                 <p>You haven't applied for any scholarship yet. Click below to apply!</p>
-                <Link to="/application-form" className="btn-apply-now" style={{ display: "inline-block", marginTop: 12, textDecoration: "none" }}>
+                <Link to="/application-form" state={{ scholarshipName: getRecommendedScholarship(user) }} className="btn-apply-now" style={{ display: "inline-block", marginTop: 12, textDecoration: "none" }}>
                   + Apply for Scholarship
                 </Link>
               </div>
@@ -253,10 +271,10 @@ export default function Dashboard({ user, onLogout }) {
               {[
                 { icon: "🎓", label: "Browse Scholarships", desc: "Explore all 20 available schemes", path: "/scholarships" },
                 { icon: "✅", label: "Check Eligibility", desc: "See which schemes you qualify for", path: "/eligibility" },
-                { icon: "📝", label: "Apply for Scholarship", desc: "Submit a new scholarship application", path: "/application-form" },
+                { icon: "📝", label: "Apply for Scholarship", desc: "Submit a new scholarship application", path: "/application-form", state: { scholarshipName: getRecommendedScholarship(user) } },
                 { icon: "👤", label: "Update Profile", desc: "Keep your information current", path: "/profile" },
               ].map((item, i) => (
-                <Link key={i} to={item.path} className="qa-card">
+                <Link key={i} to={item.path} state={item.state} className="qa-card">
                   <div className="qa-icon">{item.icon}</div>
                   <div><div className="qa-label">{item.label}</div><div className="qa-desc">{item.desc}</div></div>
                 </Link>
