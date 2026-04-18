@@ -313,7 +313,16 @@ export default function Register({ onLogin }) {
       setStep(2);
     } catch (error) {
       console.error("Error sending OTP:", error);
-      setError("Failed to send OTP. Please check your mobile number and try again.");
+      // Show user-friendly error messages
+      if (error.message.includes('Invalid phone number')) {
+        setError("Invalid phone number format. Please enter a valid 10-digit mobile number.");
+      } else if (error.message.includes('Too many requests')) {
+        setError("Too many OTP requests. Please wait a few minutes before trying again.");
+      } else if (error.message.includes('reCAPTCHA')) {
+        setError("Security verification failed. Please refresh the page and try again.");
+      } else {
+        setError("Failed to send OTP. Please check your internet connection and try again.");
+      }
     }
   };
 
@@ -344,7 +353,14 @@ export default function Register({ onLogin }) {
       setStep(3);
     } catch (error) {
       console.error("Error verifying OTP:", error);
-      setError("Invalid OTP. Please check the code and try again.");
+      // Show user-friendly error messages
+      if (error.message.includes('Invalid OTP')) {
+        setError("Invalid OTP code. Please check the code and try again.");
+      } else if (error.message.includes('expired')) {
+        setError("OTP has expired. Please request a new OTP.");
+      } else {
+        setError("OTP verification failed. Please try again.");
+      }
     }
   };
 
