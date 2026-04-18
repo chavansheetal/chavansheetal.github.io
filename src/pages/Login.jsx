@@ -222,14 +222,7 @@ export default function Login({ onLogin }) {
 
               {error && <div className="alert alert-error">❌ {error}</div>}
 
-              <div className="form-group">
-                <label>Login As</label>
-                <select value={type} onChange={e => setType(e.target.value)}>
-                  <option>Student</option>
-                  <option>Institute / College</option>
-                  <option>State Nodal Officer</option>
-                </select>
-              </div>
+
 
               <div className="form-group">
                 <label>Application ID *</label>
