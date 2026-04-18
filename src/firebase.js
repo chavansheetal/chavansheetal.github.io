@@ -15,9 +15,6 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
 // Initialize reCAPTCHA verifier for phone auth
