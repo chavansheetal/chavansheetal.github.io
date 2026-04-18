@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { saveUser, generateAppId } from "../store";
+import { sendOTPEmail } from "../emailService";
+import emailjs from '@emailjs/browser';
 import "../styles/Auth.css";
 
 const STATES = [
@@ -300,12 +302,19 @@ export default function Register({ onLogin }) {
       // Generate email OTP for verification
       const otp = String(Math.floor(100000 + Math.random() * 900000));
       setEmailOtp(otp);
+
+      // Send OTP via email
+      const emailResult = await sendOTPEmail(form.email, otp);
+      if (!emailResult.success) {
+        setError("Failed to send OTP email. Please try again.");
+        return;
+      }
+
       setError("");
-      alert(`📧 Email OTP Sent!\n\nOTP: ${otp}\n\nTo: ${form.email}\n\nPlease enter this 6-digit code to continue registration.`);
       setStep(2);
     } catch (error) {
-      console.error("Error generating OTP:", error);
-      setError("Failed to generate OTP. Please try again.");
+      console.error("Error generating/sending OTP:", error);
+      setError("Failed to send OTP. Please try again.");
     }
   };
 
@@ -313,7 +322,7 @@ export default function Register({ onLogin }) {
     setError("");
     if (!form.otp) { setError("Please enter the OTP."); return; }
     if (form.otp.trim() !== emailOtp) {
-      setError("Invalid OTP. Please check the code shown in the alert and try again.");
+      setError("Invalid OTP. Please check your email and try again.");
       return;
     }
 
@@ -758,7 +767,7 @@ export default function Register({ onLogin }) {
                               autoFocus
                             />
                             <div className="otp-hint" style={{ background: "#f0fdf4", borderColor: "#bbf7d0", color: "#166534" }}>
-                              📧 OTP shown in the browser alert — enter it below
+                              📧 OTP sent to your email — check your inbox and enter it below
                             </div>
                           </div>
                         </div>

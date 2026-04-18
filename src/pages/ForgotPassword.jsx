@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getUserByEmail, getUserByAppId, updateUserPassword } from "../store";
+import { sendOTPEmail } from "../emailService";
+import emailjs from '@emailjs/browser';
 import "../styles/Auth.css";
 
 export default function ForgotPassword() {
@@ -18,7 +20,7 @@ export default function ForgotPassword() {
   const [foundUser, setFoundUser]     = useState(null);
 
   /* ── STEP 1: send OTP to email ── */
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     setError("");
     const trimmed = email.trim();
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
@@ -26,8 +28,8 @@ export default function ForgotPassword() {
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+
+    try {
       // Try to find user by email
       const user = getUserByEmail(trimmed);
       if (!user) {
@@ -40,7 +42,14 @@ export default function ForgotPassword() {
             const code = String(Math.floor(100000 + Math.random() * 900000));
             setSentOtp(code);
             setFoundUser(userByAppId);
-            alert(`Password Reset OTP\n\nOTP: ${code}\n\nSent to: ${trimmed}`);
+
+            // Send OTP via email
+            const emailResult = await sendOTPEmail(trimmed, code);
+            if (!emailResult.success) {
+              setError("Failed to send OTP email. Please try again.");
+              return;
+            }
+
             setStep(2);
             return;
           }
@@ -54,9 +63,21 @@ export default function ForgotPassword() {
       const code = String(Math.floor(100000 + Math.random() * 900000));
       setSentOtp(code);
       setFoundUser(user);
-      alert(`Password Reset OTP\n\nOTP: ${code}\n\nSent to: ${trimmed}`);
+
+      // Send OTP via email
+      const emailResult = await sendOTPEmail(trimmed, code);
+      if (!emailResult.success) {
+        setError("Failed to send OTP email. Please try again.");
+        return;
+      }
+
       setStep(2);
-    }, 800);
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      setError("Failed to send OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   /* ── STEP 2: verify OTP ── */
@@ -64,18 +85,38 @@ export default function ForgotPassword() {
     setError("");
     if (!enteredOtp.trim()) { setError("Please enter the OTP."); return; }
     if (enteredOtp.trim() !== sentOtp) {
-      setError("Incorrect OTP. Check the OTP shown in the browser alert.");
+      setError("Incorrect OTP. Please check your email and try again.");
       return;
     }
     setStep(3);
   };
 
-  /* ── STEP 3: set new password ── */
-  const handleResetPassword = () => {
+  /* ── Resend OTP ── */
+  const handleResendOtp = async () => {
     setError("");
-    if (newPwd.length < 6)     { setError("Password must be at least 6 characters."); return; }
-    if (newPwd !== confirmPwd) { setError("Passwords do not match."); return; }
-    if (!foundUser?.appId) { setError("Session expired. Please restart."); return; }
+    const trimmed = email.trim();
+    if (!trimmed) {
+      setError("Email address not found. Please restart the process.");
+      return;
+    }
+
+    try {
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      setSentOtp(code);
+
+      // Send OTP via email
+      const emailResult = await sendOTPEmail(trimmed, code);
+      if (!emailResult.success) {
+        setError("Failed to resend OTP email. Please try again.");
+        return;
+      }
+
+      setError("OTP resent successfully. Check your email.");
+    } catch (error) {
+      console.error("Error resending OTP:", error);
+      setError("Failed to resend OTP. Please try again.");
+    }
+  };
     const ok = updateUserPassword(foundUser.appId, newPwd);
     if (!ok) { setError("Something went wrong. Please try again."); return; }
     alert("✅ Password reset successfully!\n\nYou can now login with your new password.");
@@ -120,7 +161,7 @@ export default function ForgotPassword() {
             <div className="forgot-body">
               {error && <div className="forgot-error">⚠️ {error}</div>}
               <div className="forgot-otp-hint">
-                📧 OTP shown in the browser alert — enter it below.
+                📧 OTP sent to your email — check your inbox and enter it below.
               </div>
               <input
                 type="text"
@@ -137,9 +178,9 @@ export default function ForgotPassword() {
               </button>
               <button
                 className="forgot-resend"
-                onClick={() => alert(`OTP: ${sentOtp}\n\nSent to: ${email}`)}
+                onClick={handleResendOtp}
               >
-                Show OTP again
+                Resend OTP
               </button>
               <Link to="/login" className="forgot-back">Back to Login</Link>
             </div>

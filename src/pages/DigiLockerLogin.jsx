@@ -4,6 +4,8 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { getUserByMobile, getUserByAadhaar, getUserByAppId, getUserByEmail, saveUser, generateAppId } from "../store";
 import { setupRecaptcha, sendOTP, verifyOTP } from "../firebase";
+import { sendOTPEmail } from "../emailService";
+import emailjs from '@emailjs/browser';
 import "../styles/Auth.css";
 
 function generateCaptcha() {
@@ -89,12 +91,19 @@ export default function DigiLockerLogin({ onLogin }) {
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
       setEmailOtp(otp);
       setLoginEmail(user.email);
-      alert(`Your OTP is: ${otp}\n\nPlease enter this code to login.`);
+
+      // Send OTP via email
+      const emailResult = await sendOTPEmail(user.email, otp);
+      if (!emailResult.success) {
+        setError("Failed to send OTP email. Please try again.");
+        return;
+      }
+
       setStep(2);
       setError("");
     } catch (error) {
-      console.error("Error generating OTP:", error);
-      setError("Failed to generate OTP. Please try again.");
+      console.error("Error generating/sending OTP:", error);
+      setError("Failed to send OTP. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -107,7 +116,7 @@ export default function DigiLockerLogin({ onLogin }) {
       return;
     }
     if (enteredOtp.trim() !== emailOtp) {
-      setError("Invalid OTP. Please check the code shown in the alert and try again.");
+      setError("Invalid OTP. Please check your email and try again.");
       return;
     }
 
@@ -333,7 +342,7 @@ export default function DigiLockerLogin({ onLogin }) {
                       onKeyDown={e => e.key === "Enter" && handleVerify()}
                       autoFocus
                     />
-                    <div style={styles.hint}>Check the browser alert for your OTP and enter it here.</div>
+                    <div style={styles.hint}>Check your email for the 6-digit OTP and enter it here.</div>
                   </div>
 
                   <button style={styles.primaryBtn} onClick={handleVerify}>
