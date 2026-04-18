@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { saveUser, generateAppId } from "../store";
+import { setupRecaptcha, sendOTP, verifyOTP } from "../firebase";
 import "../styles/Auth.css";
 
 const STATES = [
@@ -211,10 +212,10 @@ export default function Register({ onLogin }) {
   const [showConfirm, setShowConfirm]   = useState(false);
   const [error, setError]               = useState("");
   const [fieldErrors, setFieldErrors]   = useState({});
-  const [generatedOtp]                  = useState(() => String(Math.floor(100000 + Math.random() * 900000)));
   const [appId]                         = useState(() => generateAppId("KA"));
-
   const [duplicateInfo, setDuplicateInfo] = useState(null);
+  const [confirmationResult, setConfirmationResult] = useState(null);
+  const [otpSent, setOtpSent] = useState(false);
 
   const [form, setForm] = useState({
     category: "Post-Matric",
@@ -222,6 +223,11 @@ export default function Register({ onLogin }) {
     studentCategory: "", state: "", mobile: "", email: "",
     password: "", confirmPassword: "", otp: "",
   });
+
+  // Setup reCAPTCHA on component mount
+  useEffect(() => {
+    setupRecaptcha('recaptcha-container');
+  }, []);
 
   const set = (k, v) => {
     setForm(f => ({ ...f, [k]: v }));
@@ -247,7 +253,7 @@ export default function Register({ onLogin }) {
     setFieldErrors(errs);
   };
 
-  const handleProceed = () => {
+  const handleProceed = async () => {
     setError("");
     const errors = {};
 
@@ -296,31 +302,50 @@ export default function Register({ onLogin }) {
       return;
     }
 
-    alert(`📱 OTP sent to your Aadhaar-linked mobile (+91 ${form.mobile})\n\nOTP: ${generatedOtp}\n\n(This is a demo — in production, OTP is sent to the mobile registered with UIDAI)`);
-    setStep(2);
+    try {
+      setError("Sending OTP...");
+      const phoneNumber = `+91${form.mobile}`;
+      const result = await sendOTP(phoneNumber);
+      setConfirmationResult(result);
+      setOtpSent(true);
+      setError("");
+      alert(`📱 OTP sent to +91 ${form.mobile}\n\nPlease check your SMS and enter the 6-digit code.`);
+      setStep(2);
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      setError("Failed to send OTP. Please check your mobile number and try again.");
+    }
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     setError("");
     if (!form.otp) { setError("Please enter the OTP."); return; }
-    if (form.otp.trim() !== generatedOtp) { setError(`Invalid OTP. Check the OTP shown in the alert.`); return; }
 
-    const userData = {
-      appId, fullName: form.fullName, dob: form.dob, gender: form.gender,
-      aadhaar: form.aadhaar, category: form.studentCategory, state: form.state,
-      mobile: form.mobile, email: form.email, password: form.password,
-      type: "Student - Fresh", scholarshipCategory: form.category,
-      registeredAt: new Date().toLocaleDateString("en-IN"),
-    };
-    saveUser(userData);
+    try {
+      setError("Verifying OTP...");
+      await verifyOTP(confirmationResult, form.otp);
 
-    registerApplicant({ appId, aadhaar: form.aadhaar, mobile: form.mobile, email: form.email });
+      const userData = {
+        appId, fullName: form.fullName, dob: form.dob, gender: form.gender,
+        aadhaar: form.aadhaar, category: form.studentCategory, state: form.state,
+        mobile: form.mobile, email: form.email, password: form.password,
+        type: "Student - Fresh", scholarshipCategory: form.category,
+        registeredAt: new Date().toLocaleDateString("en-IN"),
+      };
+      saveUser(userData);
 
-    localStorage.setItem("nsp_registered_name",  form.fullName);
-    localStorage.setItem("nsp_registered_mobile", form.mobile);
-    localStorage.setItem("nsp_registered_email",  form.email);
-    localStorage.setItem("nsp_app_id",            appId);
-    setStep(3);
+      registerApplicant({ appId, aadhaar: form.aadhaar, mobile: form.mobile, email: form.email });
+
+      localStorage.setItem("nsp_registered_name",  form.fullName);
+      localStorage.setItem("nsp_registered_mobile", form.mobile);
+      localStorage.setItem("nsp_registered_email",  form.email);
+      localStorage.setItem("nsp_app_id",            appId);
+      setError("");
+      setStep(3);
+    } catch (error) {
+      console.error("Error verifying OTP:", error);
+      setError("Invalid OTP. Please check the code and try again.");
+    }
   };
 
   const handleGoToDashboard = () => {
@@ -754,9 +779,13 @@ export default function Register({ onLogin }) {
                         </button>
                         <div style={{ textAlign: "center", marginTop: 16, fontSize: 12 }}>
                           Didn't get OTP?{" "}
-                          <a href="#" style={{ color: "#4338ca", fontWeight: 600 }} onClick={e => { e.preventDefault(); alert(`OTP: ${generatedOtp}`); }}>
-                            Show OTP again
-                          </a>
+                          <button 
+                            style={{ color: "#4338ca", fontWeight: 600, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }} 
+                            onClick={handleProceed}
+                            disabled={!otpSent}
+                          >
+                            Resend OTP
+                          </button>
                         </div>
                       </div>
                     )}
@@ -798,6 +827,8 @@ export default function Register({ onLogin }) {
       </div>
 
       <Footer />
+      {/* reCAPTCHA container */}
+      <div id="recaptcha-container"></div>
     </div>
   );
 }
