@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getUserByEmail, getUserByAppId, updateUserPassword } from "../store";
 import { sendOTPEmail } from "../emailService";
-import emailjs from '@emailjs/browser';
 import "../styles/Auth.css";
 
 export default function ForgotPassword() {
@@ -117,6 +116,28 @@ export default function ForgotPassword() {
       setError("Failed to resend OTP. Please try again.");
     }
   };
+
+  /* ── STEP 3: reset password ── */
+  const handleResetPassword = () => {
+    setError("");
+    if (!foundUser) {
+      setError("Session expired. Please restart password reset.");
+      setStep(1);
+      return;
+    }
+    if (!newPwd.trim()) {
+      setError("Please enter a new password.");
+      return;
+    }
+    if (newPwd.length < 6) {
+      setError("New password must be at least 6 characters.");
+      return;
+    }
+    if (newPwd !== confirmPwd) {
+      setError("Passwords do not match.");
+      return;
+    }
+
     const ok = updateUserPassword(foundUser.appId, newPwd);
     if (!ok) { setError("Something went wrong. Please try again."); return; }
     alert("✅ Password reset successfully!\n\nYou can now login with your new password.");

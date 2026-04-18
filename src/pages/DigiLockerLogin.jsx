@@ -122,7 +122,6 @@ export default function DigiLockerLogin({ onLogin }) {
       // Set login session
       localStorage.setItem("nsp_logged_in", "true");
       localStorage.setItem("nsp_user_name", user.fullName);
-      localStorage.setItem("nsp_user_mobile", user.mobile || "");
       localStorage.setItem("nsp_user_email", user.email);
       localStorage.setItem("nsp_app_id", user.appId);
 

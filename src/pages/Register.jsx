@@ -49,7 +49,7 @@ function saveRegistry(registry) {
   localStorage.setItem(REGISTRY_KEY, JSON.stringify(registry));
 }
 
-function checkDuplicate(aadhaar, mobile, email) {
+function checkDuplicate(aadhaar, email) {
   const registry = getRegistry();
   for (const [, record] of Object.entries(registry)) {
     if (aadhaar && record.aadhaar && record.aadhaar === aadhaar) {
@@ -62,9 +62,9 @@ function checkDuplicate(aadhaar, mobile, email) {
   return { isDuplicate: false };
 }
 
-function registerApplicant({ appId, aadhaar, mobile, email }) {
+function registerApplicant({ appId, aadhaar, email }) {
   const registry = getRegistry();
-  registry[appId] = { appId, aadhaar, mobile, email, registeredAt: new Date().toISOString() };
+  registry[appId] = { appId, aadhaar, email, registeredAt: new Date().toISOString() };
   saveRegistry(registry);
 }
 
@@ -131,16 +131,6 @@ function validateDob(val) {
   if (dob > today) return "Date of Birth cannot be in the future.";
   if (age < 5) return "Applicant must be at least 5 years old.";
   if (age > 35) return "Applicant must not be older than 35 years to apply.";
-  return null;
-}
-
-function validateMobile(val) {
-  if (!val) return "Mobile number is required.";
-  if (!/^\d{10}$/.test(val)) return "Mobile number must be exactly 10 digits.";
-  if (!/^[6-9]/.test(val)) return "Mobile number must start with 6, 7, 8, or 9.";
-  if (/^(\d)\1{9}$/.test(val)) return "Mobile number cannot have all identical digits.";
-  if (/^(1234567890|0987654321|1111111111|0000000000)$/.test(val))
-    return "Please enter a valid mobile number.";
   return null;
 }
 
@@ -217,7 +207,7 @@ export default function Register({ onLogin }) {
   const [form, setForm] = useState({
     category: "Post-Matric",
     fullName: "", dob: "", gender: "", aadhaar: "",
-    studentCategory: "", state: "", mobile: "", email: "",
+    studentCategory: "", state: "", email: "",
     password: "", confirmPassword: "", otp: "",
   });
 
@@ -284,7 +274,7 @@ export default function Register({ onLogin }) {
 
     setFieldErrors({});
 
-    const dupCheck = checkDuplicate(form.aadhaar, null, form.email);
+    const dupCheck = checkDuplicate(form.aadhaar, form.email);
     if (dupCheck.isDuplicate) {
       setDuplicateInfo({ field: dupCheck.field, existingAppId: dupCheck.existingAppId });
       return;
@@ -347,7 +337,6 @@ export default function Register({ onLogin }) {
 
   const fieldLabel = (field) => ({
     aadhaar: "Aadhaar number",
-    mobile:  "mobile number",
     email:   "email address",
   }[field] || field);
 
@@ -731,7 +720,7 @@ export default function Register({ onLogin }) {
                         <div className="otp-lock-icon">🔐</div>
                         <h3 style={{ color: "#1e1b4b", marginBottom: 12 }}>Multi-Factor Authentication</h3>
                         <div className="alert alert-success" style={{ textAlign: "left" }}>
-                          ✅ One Time Password sent to Email: <strong>{form.email}</strong>
+                          ✅ OTP sent to registered email id: <strong>{form.email}</strong>
                         </div>
                         <div className="form-group" style={{ textAlign: "left" }}>
                           <label style={{ fontWeight: 600 }}>Enter 6-digit Secure OTP *</label>

@@ -1,41 +1,37 @@
-// EmailJS configuration for OTP sending
-// NOTE: Replace these with your actual EmailJS service credentials
-// 1. Go to https://www.emailjs.com/
-// 2. Create an account and set up a service (Gmail, Outlook, etc.)
-// 3. Create an email template with variables: {{to_email}}, {{otp_code}}, {{subject}}
-// 4. Get your Service ID, Template ID, and Public Key from the dashboard
+// Free alternative (Firebase-free): Web3Forms
+// Configure in .env as VITE_WEB3FORMS_ACCESS_KEY=your_access_key
+const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit";
+const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || "";
 
-export const EMAILJS_CONFIG = {
-  SERVICE_ID: 'service_your_service_id', // Replace with your EmailJS service ID
-  TEMPLATE_ID: 'template_otp_template', // Replace with your EmailJS template ID
-  PUBLIC_KEY: 'your_public_key' // Replace with your EmailJS public key
-};
-
-// Function to send OTP via email
 export const sendOTPEmail = async (email, otp) => {
-  // For demo purposes, if EmailJS is not configured, show alert as fallback
-  if (EMAILJS_CONFIG.SERVICE_ID === 'service_your_service_id') {
-    console.warn('EmailJS not configured. Showing OTP in alert for demo purposes.');
-    alert(`📧 Email OTP (Demo Mode)\n\nOTP: ${otp}\n\nTo: ${email}\n\nIn production, this would be sent via email.`);
+  // Demo fallback when no provider key is configured.
+  if (!WEB3FORMS_ACCESS_KEY) {
+    console.warn("Web3Forms access key not configured. Using demo OTP alert.");
+    alert(`📧 OTP sent to registered email id\n\nOTP: ${otp}\n\nEmail: ${email}\n\nSet VITE_WEB3FORMS_ACCESS_KEY to send real emails.`);
     return { success: true };
   }
 
-  const templateParams = {
-    to_email: email,
-    otp_code: otp,
-    subject: 'Your NSP Scholar OTP Code'
-  };
-
   try {
-    const response = await emailjs.send(
-      EMAILJS_CONFIG.SERVICE_ID,
-      EMAILJS_CONFIG.TEMPLATE_ID,
-      templateParams,
-      EMAILJS_CONFIG.PUBLIC_KEY
-    );
-    return { success: true, response };
+    const response = await fetch(WEB3FORMS_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        access_key: WEB3FORMS_ACCESS_KEY,
+        subject: "Your NSP Scholar OTP Code",
+        from_name: "NSP Scholar OTP",
+        email,
+        message: `Your OTP code is ${otp}. It is valid for a short time. Do not share this code.`,
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || "Failed to send OTP email");
+    }
+
+    return { success: true, response: data };
   } catch (error) {
-    console.error('EmailJS error:', error);
+    console.error("Web3Forms email error:", error);
     return { success: false, error };
   }
 };

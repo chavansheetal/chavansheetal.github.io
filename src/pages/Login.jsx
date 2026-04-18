@@ -66,7 +66,6 @@ export default function Login({ onLogin }) {
       const sessionUser = {
         name:   user.fullName,
         id:     user.appId,
-        mobile: user.mobile,
         email:  user.email,
         appId:  user.appId,
         type,

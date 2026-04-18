@@ -439,7 +439,7 @@ export default function Home({ user, onLogout }) {
                 <div className="side-box-head">🔐 Student Login</div>
                 <div className="side-box-body">
                   <div className="form-group"><label>Login Type</label><select><option>Student</option><option>Institute</option><option>Ministry</option></select></div>
-                  <div className="form-group"><label>Application ID / Mobile</label><input type="text" placeholder="Enter Application ID" /></div>
+                  <div className="form-group"><label>Application ID</label><input type="text" placeholder="Enter Application ID" /></div>
                   <div className="form-group"><label>Password</label><input type="password" placeholder="Enter Password" /></div>
                   <button className="btn-gov" onClick={() => navigate("/login")}>Login to Portal</button>
                   <div className="or-row">OR</div>
