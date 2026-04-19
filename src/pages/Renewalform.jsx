@@ -217,11 +217,19 @@ export default function RenewalForm({ user, onLogout }) {
       }
       const marksVal = parseFloat(academic.marks);
       
-      const rule = existingApp ? SCHOLARSHIP_RULES.find(r => existingApp.scheme && r.name.startsWith(existingApp.scheme)) : null;
+      let rule = null;
+      if (existingApp && existingApp.scheme) {
+        const schemeLower = existingApp.scheme.toLowerCase().trim();
+        rule = SCHOLARSHIP_RULES.find(r => 
+          r.name.toLowerCase().includes(schemeLower) || 
+          schemeLower.includes(r.name.split(" — ")[0].toLowerCase().trim())
+        );
+      }
+      const minimumMarks = rule ? rule.minMarks : 40; // Fallback to lowest possible minimum (40) if string match fails
 
       if (!academic.marks || isNaN(marksVal) || marksVal < 0 || marksVal > 100) {
         newErrors.marks = true;
-      } else if (rule && marksVal < rule.minMarks) {
+      } else if (marksVal < minimumMarks) {
         newErrors.marks = true;
         msg = `A failure to meet the minimum academic criteria, which may result in a reduction or cancellation of the financial aid. Your scholarship has been cancelled due to failure to meet the minimum academic requirements`;
       }
