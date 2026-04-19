@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import StudentSidebar from "./StudentSidebar";
@@ -158,9 +158,45 @@ export default function RenewalForm({ user, onLogout }) {
   };
   const setB = (k, v) => setBank(prev => ({ ...prev, [k]: v }));
 
+  const playErrorSound = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = "sine"; osc.frequency.setValueAtTime(880, ctx.currentTime);
+      gain.gain.setValueAtTime(0.5, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.5);
+    } catch (e) { }
+  };
+
+  const filesRef = useRef({});
+  useEffect(() => { filesRef.current = files; }, [files]);
+
   const handleFileUpload = (e, docName) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Force pull from Ref to absolutely prevent state staleness across concurrent updates
+    const currentFiles = filesRef.current;
+    
+    // Check across all other deployed doc inputs to prevent cross-duplicate uploads
+    const isDuplicate = Object.keys(currentFiles).some(key => {
+      if (key === docName) return false; // Allowed to overwrite itself
+      const existingDoc = currentFiles[key];
+      if (!existingDoc || !existingDoc.name) return false;
+      const cleanName = (n) => n.replace(/\s+/g, "").toLowerCase();
+      return cleanName(existingDoc.name) === cleanName(file.name);
+    });
+
+    if (isDuplicate) {
+      playErrorSound();
+      alert(`🔔 AI Duplicate Detection: The document "${file.name}" has already been uploaded for another category.`);
+      e.target.value = "";
+      return;
+    }
+
     const fileUrl = URL.createObjectURL(file);
     if (file.type.startsWith("image/")) {
       const img = new Image();
