@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import StudentSidebar from "./StudentSidebar";
 import { getApplicationsByUser, getApplications, getUserByAppId, saveRenewal } from "../store";
+import { SCHOLARSHIP_RULES } from "./ApplicationForm";
 import "../styles/Dashboard.css";
 import "../styles/ApplicationForm.css";
 
@@ -215,9 +216,17 @@ export default function RenewalForm({ user, onLogout }) {
         if (!academic.schoolAcademicYear || academic.schoolAcademicYear.length < 4) newErrors.schoolAcademicYear = true;
       }
       const marksVal = parseFloat(academic.marks);
-      if (!academic.marks || isNaN(marksVal) || marksVal < 0 || marksVal > 100) newErrors.marks = true;
+      
+      const rule = existingApp ? SCHOLARSHIP_RULES.find(r => existingApp.scheme && r.name.startsWith(existingApp.scheme)) : null;
 
-      if (Object.keys(newErrors).length > 0) msg = "Please fill all required academic fields correctly.";
+      if (!academic.marks || isNaN(marksVal) || marksVal < 0 || marksVal > 100) {
+        newErrors.marks = true;
+      } else if (rule && marksVal < rule.minMarks) {
+        newErrors.marks = true;
+        msg = `A failure to meet the minimum academic criteria, which may result in a reduction or cancellation of the financial aid. Your scholarship has been cancelled due to failure to meet the minimum academic requirements`;
+      }
+
+      if (Object.keys(newErrors).length > 0 && !msg) msg = "Please fill all required academic fields correctly.";
     }
 
     if (step === 2) {

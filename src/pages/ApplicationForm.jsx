@@ -23,7 +23,7 @@ const INCOME_OPTIONS = [
 ];
 
 // Income limit per scholarship (null = no limit)
-const SCHOLARSHIP_RULES = [
+export const SCHOLARSHIP_RULES = [
   { name: "Central Sector Scheme (CSSS) — ₹20,000/yr",               minMarks: 80, maxIncome: 450000,  incomLabel: "₹4,50,000" },
   { name: "National Means Cum Merit (NMMS) — ₹12,000/yr",            minMarks: 55, maxIncome: 350000,  incomLabel: "₹3,50,000" },
   { name: "PM YASASVI Scholarship (Class 9-10) — ₹75,000/yr",        minMarks: 60, maxIncome: 250000,  incomLabel: "₹2,50,000" },
@@ -420,7 +420,7 @@ export default function ApplicationForm({ user, onLogout }) {
         } else if (rule && marksVal < rule.minMarks) {
           newErrors.marks = true;
           const schemeName = form.scholarship.split(" — ")[0];
-          msg = `Error:\n\n${schemeName} Eligibility Failed.\n\nRequired Minimum: ${rule.minMarks}%\nYour Marks: ${marksVal}%\n\nYour entered marks do not meet the eligibility conditions.`;
+          msg = `A failure to meet the minimum academic criteria, which may result in a reduction or cancellation of the financial aid. Your scholarship has been cancelled due to failure to meet the minimum academic requirements`;
         }
       } else {
         // School validations
@@ -438,7 +438,7 @@ export default function ApplicationForm({ user, onLogout }) {
         } else if (rule && marksVal < rule.minMarks) {
           newErrors.marks = true;
           const schemeName = form.scholarship.split(" — ")[0];
-          msg = `Error:\n\n${schemeName} Eligibility Failed.\n\nRequired Minimum: ${rule.minMarks}%\nYour Marks: ${marksVal}%\n\nYour entered marks do not meet the eligibility conditions.`;
+          msg = `A failure to meet the minimum academic criteria, which may result in a reduction or cancellation of the financial aid. Your scholarship has been cancelled due to failure to meet the minimum academic requirements`;
         }
       }
 
