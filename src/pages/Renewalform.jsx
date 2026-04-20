@@ -181,7 +181,7 @@ export default function RenewalForm({ user, onLogout }) {
 
     // Force pull from Ref to absolutely prevent state staleness across concurrent updates
     const currentFiles = filesRef.current;
-    
+
     // Check across all other deployed doc inputs to prevent cross-duplicate uploads
     const isDuplicate = Object.keys(currentFiles).some(key => {
       if (key === docName) return false; // Allowed to overwrite itself
@@ -219,7 +219,7 @@ export default function RenewalForm({ user, onLogout }) {
       reader.readAsDataURL(file);
     }
     setFiles(prev => ({ ...prev, [docName]: { name: file.name, status: "scanning", url: fileUrl } }));
-    
+
     try {
       const verificationResult = await apiSetuVerifyDocument(file, docName, {
         fullName: existingApp?.studentName || "Renewal Student"
@@ -276,12 +276,12 @@ export default function RenewalForm({ user, onLogout }) {
         if (!academic.schoolAcademicYear || academic.schoolAcademicYear.length < 4) newErrors.schoolAcademicYear = true;
       }
       const marksVal = parseFloat(academic.marks);
-      
+
       let rule = null;
       if (existingApp && existingApp.scheme) {
         const schemeLower = existingApp.scheme.toLowerCase().trim();
-        rule = SCHOLARSHIP_RULES.find(r => 
-          r.name.toLowerCase().includes(schemeLower) || 
+        rule = SCHOLARSHIP_RULES.find(r =>
+          r.name.toLowerCase().includes(schemeLower) ||
           schemeLower.includes(r.name.split(" — ")[0].toLowerCase().trim())
         );
       }
@@ -342,29 +342,29 @@ export default function RenewalForm({ user, onLogout }) {
 
     const academicPayload = isCollege
       ? {
-          studentType: "College",
-          instituteName: academic.instituteName,
-          course: academic.course,
-          specialisation: academic.specialisation,
-          year: academic.promotedToYear || academic.year,
-          marks: academic.marks,
-          gradingSystem: academic.gradingSystem,
-          boardUniv: academic.boardUniv,
-          courseDuration: academic.courseDuration,
-          academicYear: academic.academicYear,
-        }
+        studentType: "College",
+        instituteName: academic.instituteName,
+        course: academic.course,
+        specialisation: academic.specialisation,
+        year: academic.promotedToYear || academic.year,
+        marks: academic.marks,
+        gradingSystem: academic.gradingSystem,
+        boardUniv: academic.boardUniv,
+        courseDuration: academic.courseDuration,
+        academicYear: academic.academicYear,
+      }
       : {
-          studentType: "School",
-          instituteName: academic.instituteName,
-          schoolClass: academic.schoolClass,
-          stream: academic.stream,
-          board: academic.boardUniv,
-          state: academic.schoolState,
-          lastExamClass: academic.lastExamClass,
-          marks: academic.marks,
-          gradingSystem: academic.gradingSystem,
-          academicYear: academic.schoolAcademicYear,
-        };
+        studentType: "School",
+        instituteName: academic.instituteName,
+        schoolClass: academic.schoolClass,
+        stream: academic.stream,
+        board: academic.boardUniv,
+        state: academic.schoolState,
+        lastExamClass: academic.lastExamClass,
+        marks: academic.marks,
+        gradingSystem: academic.gradingSystem,
+        academicYear: academic.schoolAcademicYear,
+      };
 
     const success = saveRenewal(existingApp.appId, {
       academicDetails: academicPayload,
@@ -520,6 +520,30 @@ export default function RenewalForm({ user, onLogout }) {
                   </div>
                 )}
 
+                <div className="form-group" style={{ marginBottom: "16px" }}>
+                  <label>Student Level / Type *</label>
+                  <div style={{ display: "flex", gap: "20px", marginTop: "8px" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontWeight: "normal" }}>
+                      <input 
+                        type="radio" 
+                        name="studentType" 
+                        value="school" 
+                        checked={academic.studentType === 'school'} 
+                        onChange={() => setAcad("studentType", "school")}
+                      /> School Student (Class 1-12)
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontWeight: "normal" }}>
+                      <input 
+                        type="radio" 
+                        name="studentType" 
+                        value="college" 
+                        checked={academic.studentType === 'college'} 
+                        onChange={() => setAcad("studentType", "college")}
+                      /> College / University Student
+                    </label>
+                  </div>
+                </div>
+
                 <div className="form-group">
                   <label>{academic.studentType === "school" ? "School Name" : "Institution Name"} *</label>
                   <input
@@ -589,7 +613,7 @@ export default function RenewalForm({ user, onLogout }) {
                     </div>
 
                     <div style={{ fontSize: 13, fontWeight: 600, color: "#6b7280", margin: "20px 0 12px", paddingBottom: 6, borderBottom: "1px solid #e5e7eb" }}>
-                      Last exam performance
+                      Latest exam performance
                     </div>
                     <div className="form-row-2">
                       <div className="form-group">
@@ -605,7 +629,7 @@ export default function RenewalForm({ user, onLogout }) {
                         <label>Current Class / Grade *</label>
                         <select style={errorStyle("schoolClass")} value={academic.schoolClass} onChange={e => setAcad("schoolClass", e.target.value)}>
                           <option value="">-- Select --</option>
-                          {["Class 1","Class 2","Class 3","Class 4","Class 5","Class 6","Class 7","Class 8","Class 9","Class 10","Class 11","Class 12"].map(c => <option key={c}>{c}</option>)}
+                          {["Class 1", "Class 2", "Class 3", "Class 4", "Class 5", "Class 6", "Class 7", "Class 8", "Class 9", "Class 10", "Class 11", "Class 12"].map(c => <option key={c}>{c}</option>)}
                         </select>
                       </div>
                       <div className="form-group">
@@ -637,7 +661,7 @@ export default function RenewalForm({ user, onLogout }) {
                         <label>Last Exam Class *</label>
                         <select style={errorStyle("lastExamClass")} value={academic.lastExamClass} onChange={e => setAcad("lastExamClass", e.target.value)}>
                           <option value="">-- Select --</option>
-                          {["Kindergarten / Pre-School (KG/LKG/UKG)","Class 1","Class 2","Class 3","Class 4","Class 5","Class 6","Class 7","Class 8","Class 9","Class 10","Class 11"].map(c => <option key={c}>{c}</option>)}
+                          {["Kindergarten / Pre-School (KG/LKG/UKG)", "Class 1", "Class 2", "Class 3", "Class 4", "Class 5", "Class 6", "Class 7", "Class 8", "Class 9", "Class 10", "Class 11"].map(c => <option key={c}>{c}</option>)}
                         </select>
                       </div>
                       <div className="form-group">
