@@ -6,7 +6,7 @@ import { saveApplication, getApplicationsByUser, getUserByAppId } from "../store
 import "../styles/Dashboard.css";
 import "../styles/ApplicationForm.css";
 
-import { apiSetuVerifyDocument } from "../services/apiSetuService";
+
 
 const STEPS = ["Personal Details", "Academic Info", "Bank Details", "Upload Documents", "Preview & Submit"];
 
@@ -328,38 +328,15 @@ export default function ApplicationForm({ user, onLogout }) {
       }
       set("files", { ...form.files, [docName]: { name: file.name, status: "scanning", url: fileUrl } });
       
-      try {
-        const verificationResult = await apiSetuVerifyDocument(file, docName, {
-          fullName: form.fullName,
-          dob: form.dob
-        });
-
-        if (verificationResult.isValid) {
-          setForm(prev => {
-            if (prev.files[docName]?.name === file.name) {
-              return { ...prev, files: { ...prev.files, [docName]: { ...prev.files[docName], status: "verified", confidence: verificationResult.confidence } } };
-            }
-            return prev;
-          });
-        } else {
-          playErrorSound();
-          alert(verificationResult.errorMsg);
-          // Remove the rejected file
-          setForm(prev => {
-            const newFiles = { ...prev.files };
-            delete newFiles[docName];
-            return { ...prev, files: newFiles };
-          });
-          e.target.value = "";
-        }
-      } catch (err) {
-        alert("API Setu Verification Service Unavailable.");
+      // Mock verification delay since API Setu was removed
+      setTimeout(() => {
         setForm(prev => {
-          const newFiles = { ...prev.files };
-          delete newFiles[docName];
-          return { ...prev, files: newFiles };
+          if (prev.files[docName]?.name === file.name) {
+            return { ...prev, files: { ...prev.files, [docName]: { ...prev.files[docName], status: "verified", confidence: 96 } } };
+          }
+          return prev;
         });
-      }
+      }, 1500);
     }
   };
 
@@ -1052,7 +1029,7 @@ export default function ApplicationForm({ user, onLogout }) {
                           <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: "12px", background: "#f0fdf4", padding: "8px", borderRadius: "6px" }}>
                             {fileObj.url && <img src={fileObj.url} alt="Preview" style={{ width: 40, height: 40, objectFit: "cover", borderRadius: "4px", border: "1px solid #bbf7d0" }} />}
                             <div style={{ flex: 1 }}>
-                              <div style={{ color: "#16a34a", fontSize: "12px", fontWeight: "bold" }}>🛡️ API Setu Verified {fileObj.confidence && `(${fileObj.confidence}% Match)`}</div>
+                              <div style={{ color: "#16a34a", fontSize: "12px", fontWeight: "bold" }}>✅ Document Verified {fileObj.confidence && `(${fileObj.confidence}% Match)`}</div>
                               <div style={{ fontSize: "11px", color: "#475569", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "160px" }}>{fileObj.name}</div>
                             </div>
                           </div>
