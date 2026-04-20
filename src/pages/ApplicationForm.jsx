@@ -1029,7 +1029,7 @@ export default function ApplicationForm({ user, onLogout }) {
                           <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: "12px", background: "#f0fdf4", padding: "8px", borderRadius: "6px" }}>
                             {fileObj.url && <img src={fileObj.url} alt="Preview" style={{ width: 40, height: 40, objectFit: "cover", borderRadius: "4px", border: "1px solid #bbf7d0" }} />}
                             <div style={{ flex: 1 }}>
-                              <div style={{ color: "#16a34a", fontSize: "12px", fontWeight: "bold" }}>✅ Document Verified {fileObj.confidence && `(${fileObj.confidence}% Match)`}</div>
+                              <div style={{ color: "#16a34a", fontSize: "12px", fontWeight: "bold" }}>✅ Document Verified</div>
                               <div style={{ fontSize: "11px", color: "#475569", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "160px" }}>{fileObj.name}</div>
                             </div>
                           </div>
