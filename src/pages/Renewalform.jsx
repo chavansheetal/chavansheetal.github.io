@@ -4,7 +4,6 @@ import Navbar from "./Navbar";
 import StudentSidebar from "./StudentSidebar";
 import { getApplicationsByUser, getApplications, getUserByAppId, saveRenewal } from "../store";
 import { SCHOLARSHIP_RULES } from "./ApplicationForm";
-import { apiSetuVerifyDocument } from "../services/apiSetuService";
 import "../styles/Dashboard.css";
 import "../styles/ApplicationForm.css";
 
@@ -220,36 +219,15 @@ export default function RenewalForm({ user, onLogout }) {
     }
     setFiles(prev => ({ ...prev, [docName]: { name: file.name, status: "scanning", url: fileUrl } }));
 
-    try {
-      const verificationResult = await apiSetuVerifyDocument(file, docName, {
-        fullName: existingApp?.studentName || "Renewal Student"
-      });
-
-      if (verificationResult.isValid) {
-        setFiles(prev => {
-          if (prev[docName]?.name === file.name) {
-            return { ...prev, [docName]: { ...prev[docName], status: "verified", confidence: verificationResult.confidence } };
-          }
-          return prev;
-        });
-      } else {
-        playErrorSound();
-        alert(verificationResult.errorMsg);
-        setFiles(prev => {
-          const newFiles = { ...prev };
-          delete newFiles[docName];
-          return newFiles;
-        });
-        e.target.value = "";
-      }
-    } catch (err) {
-      alert("API Setu Verification Service Unavailable.");
+    // Mock verification delay since API Setu was removed
+    setTimeout(() => {
       setFiles(prev => {
-        const newFiles = { ...prev };
-        delete newFiles[docName];
-        return newFiles;
+        if (prev[docName]?.name === file.name) {
+          return { ...prev, [docName]: { ...prev[docName], status: "verified", confidence: 98 } };
+        }
+        return prev;
       });
-    }
+    }, 1500);
   };
 
   const validate = () => {
