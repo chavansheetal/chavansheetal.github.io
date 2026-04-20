@@ -6,6 +6,8 @@ import { saveApplication, getApplicationsByUser, getUserByAppId } from "../store
 import "../styles/Dashboard.css";
 import "../styles/ApplicationForm.css";
 
+import { apiSetuVerifyDocument } from "../services/apiSetuService";
+
 const STEPS = ["Personal Details", "Academic Info", "Bank Details", "Upload Documents", "Preview & Submit"];
 
 // Income bracket options shown in dropdown
@@ -294,7 +296,7 @@ export default function ApplicationForm({ user, onLogout }) {
     set("annualIncome", parsed);
   };
 
-  const handleFileUpload = (e, docName) => {
+  const handleFileUpload = async (e, docName) => {
     const file = e.target.files[0];
     if (file) {
       const existingDocs = Object.values(form.files);
@@ -325,14 +327,39 @@ export default function ApplicationForm({ user, onLogout }) {
         reader.readAsDataURL(file);
       }
       set("files", { ...form.files, [docName]: { name: file.name, status: "scanning", url: fileUrl } });
-      setTimeout(() => {
-        setForm(prev => {
-          if (prev.files[docName]?.name === file.name) {
-            return { ...prev, files: { ...prev.files, [docName]: { ...prev.files[docName], status: "verified" } } };
-          }
-          return prev;
+      
+      try {
+        const verificationResult = await apiSetuVerifyDocument(file, docName, {
+          fullName: form.fullName,
+          dob: form.dob
         });
-      }, 1500);
+
+        if (verificationResult.isValid) {
+          setForm(prev => {
+            if (prev.files[docName]?.name === file.name) {
+              return { ...prev, files: { ...prev.files, [docName]: { ...prev.files[docName], status: "verified", confidence: verificationResult.confidence } } };
+            }
+            return prev;
+          });
+        } else {
+          playErrorSound();
+          alert(verificationResult.errorMsg);
+          // Remove the rejected file
+          setForm(prev => {
+            const newFiles = { ...prev.files };
+            delete newFiles[docName];
+            return { ...prev, files: newFiles };
+          });
+          e.target.value = "";
+        }
+      } catch (err) {
+        alert("API Setu Verification Service Unavailable.");
+        setForm(prev => {
+          const newFiles = { ...prev.files };
+          delete newFiles[docName];
+          return { ...prev, files: newFiles };
+        });
+      }
     }
   };
 
@@ -1025,7 +1052,7 @@ export default function ApplicationForm({ user, onLogout }) {
                           <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: "12px", background: "#f0fdf4", padding: "8px", borderRadius: "6px" }}>
                             {fileObj.url && <img src={fileObj.url} alt="Preview" style={{ width: 40, height: 40, objectFit: "cover", borderRadius: "4px", border: "1px solid #bbf7d0" }} />}
                             <div style={{ flex: 1 }}>
-                              <div style={{ color: "#16a34a", fontSize: "12px", fontWeight: "bold" }}>🛡️ AI Verified Signature</div>
+                              <div style={{ color: "#16a34a", fontSize: "12px", fontWeight: "bold" }}>🛡️ API Setu Verified {fileObj.confidence && `(${fileObj.confidence}% Match)`}</div>
                               <div style={{ fontSize: "11px", color: "#475569", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "160px" }}>{fileObj.name}</div>
                             </div>
                           </div>

@@ -4,6 +4,7 @@ import Navbar from "./Navbar";
 import StudentSidebar from "./StudentSidebar";
 import { getApplicationsByUser, getApplications, getUserByAppId, saveRenewal } from "../store";
 import { SCHOLARSHIP_RULES } from "./ApplicationForm";
+import { apiSetuVerifyDocument } from "../services/apiSetuService";
 import "../styles/Dashboard.css";
 import "../styles/ApplicationForm.css";
 
@@ -174,7 +175,7 @@ export default function RenewalForm({ user, onLogout }) {
   const filesRef = useRef({});
   useEffect(() => { filesRef.current = files; }, [files]);
 
-  const handleFileUpload = (e, docName) => {
+  const handleFileUpload = async (e, docName) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -218,14 +219,37 @@ export default function RenewalForm({ user, onLogout }) {
       reader.readAsDataURL(file);
     }
     setFiles(prev => ({ ...prev, [docName]: { name: file.name, status: "scanning", url: fileUrl } }));
-    setTimeout(() => {
-      setFiles(prev => {
-        if (prev[docName]?.name === file.name) {
-          return { ...prev, [docName]: { ...prev[docName], status: "verified" } };
-        }
-        return prev;
+    
+    try {
+      const verificationResult = await apiSetuVerifyDocument(file, docName, {
+        fullName: existingApp?.studentName || "Renewal Student"
       });
-    }, 1500);
+
+      if (verificationResult.isValid) {
+        setFiles(prev => {
+          if (prev[docName]?.name === file.name) {
+            return { ...prev, [docName]: { ...prev[docName], status: "verified", confidence: verificationResult.confidence } };
+          }
+          return prev;
+        });
+      } else {
+        playErrorSound();
+        alert(verificationResult.errorMsg);
+        setFiles(prev => {
+          const newFiles = { ...prev };
+          delete newFiles[docName];
+          return newFiles;
+        });
+        e.target.value = "";
+      }
+    } catch (err) {
+      alert("API Setu Verification Service Unavailable.");
+      setFiles(prev => {
+        const newFiles = { ...prev };
+        delete newFiles[docName];
+        return newFiles;
+      });
+    }
   };
 
   const validate = () => {
@@ -712,7 +736,7 @@ export default function RenewalForm({ user, onLogout }) {
                           <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: "12px", background: "#f0fdf4", padding: "8px", borderRadius: "6px" }}>
                             {fileObj.url && <img src={fileObj.url} alt="Preview" style={{ width: 40, height: 40, objectFit: "cover", borderRadius: "4px", border: "1px solid #bbf7d0" }} />}
                             <div style={{ flex: 1 }}>
-                              <div style={{ color: "#16a34a", fontSize: "12px", fontWeight: "bold" }}>🛡️ AI Verified</div>
+                              <div style={{ color: "#16a34a", fontSize: "12px", fontWeight: "bold" }}>🛡️ API Setu Verified {fileObj.confidence && `(${fileObj.confidence}% Match)`}</div>
                               <div style={{ fontSize: "11px", color: "#475569", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "160px" }}>{fileObj.name}</div>
                             </div>
                           </div>
