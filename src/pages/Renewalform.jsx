@@ -520,37 +520,13 @@ export default function RenewalForm({ user, onLogout }) {
                   </div>
                 )}
 
-                <div className="form-group" style={{ marginBottom: "16px" }}>
-                  <label>Student Level / Type *</label>
-                  <div style={{ display: "flex", gap: "20px", marginTop: "8px" }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontWeight: "normal" }}>
-                      <input 
-                        type="radio" 
-                        name="studentType" 
-                        value="school" 
-                        checked={academic.studentType === 'school'} 
-                        onChange={() => setAcad("studentType", "school")}
-                      /> School Student (Class 1-12)
-                    </label>
-                    <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontWeight: "normal" }}>
-                      <input 
-                        type="radio" 
-                        name="studentType" 
-                        value="college" 
-                        checked={academic.studentType === 'college'} 
-                        onChange={() => setAcad("studentType", "college")}
-                      /> College / University Student
-                    </label>
-                  </div>
-                </div>
-
                 <div className="form-group">
-                  <label>{academic.studentType === "school" ? "School Name" : "Institution Name"} *</label>
+                  <label>{academic.studentType === "school" ? "School Name" : "Institution Name"}</label>
                   <input
-                    style={errorStyle("instituteName")}
+                    style={{ background: "#f3f4f6", color: "#6b7280", cursor: "not-allowed" }}
                     type="text"
                     value={academic.instituteName}
-                    onChange={e => setAcad("instituteName", e.target.value)}
+                    readOnly
                   />
                 </div>
 
@@ -558,12 +534,12 @@ export default function RenewalForm({ user, onLogout }) {
                   <>
                     <div className="form-row-2">
                       <div className="form-group">
-                        <label>Course / Programme *</label>
-                        <input style={errorStyle("course")} type="text" value={academic.course} onChange={e => setAcad("course", e.target.value)} />
+                        <label>Course / Programme</label>
+                        <input style={{ background: "#f3f4f6", color: "#6b7280", cursor: "not-allowed" }} type="text" value={academic.course} readOnly />
                       </div>
                       <div className="form-group">
                         <label>Specialisation / Branch</label>
-                        <input type="text" value={academic.specialisation} onChange={e => setAcad("specialisation", e.target.value)} />
+                        <input style={{ background: "#f3f4f6", color: "#6b7280", cursor: "not-allowed" }} type="text" value={academic.specialisation} readOnly />
                       </div>
                     </div>
 
@@ -585,16 +561,12 @@ export default function RenewalForm({ user, onLogout }) {
 
                     <div className="form-row-2">
                       <div className="form-group">
-                        <label>University / Board *</label>
-                        <input style={errorStyle("boardUniv")} type="text" value={academic.boardUniv} onChange={e => setAcad("boardUniv", e.target.value)} />
+                        <label>University / Board</label>
+                        <input style={{ background: "#f3f4f6", color: "#6b7280", cursor: "not-allowed" }} type="text" value={academic.boardUniv} readOnly />
                       </div>
                       <div className="form-group">
-                        <label>Course Duration *</label>
-                        <select style={errorStyle("courseDuration")} value={academic.courseDuration} onChange={e => setAcad("courseDuration", e.target.value)}>
-                          <option value="">-- Select --</option>
-                          <option>2 years (Diploma)</option><option>3 years (UG)</option>
-                          <option>4 years (UG / B.Tech)</option><option>5 years (Integrated)</option><option>Other</option>
-                        </select>
+                        <label>Course Duration</label>
+                        <input style={{ background: "#f3f4f6", color: "#6b7280", cursor: "not-allowed" }} type="text" value={academic.courseDuration} readOnly />
                       </div>
                     </div>
 
@@ -613,12 +585,12 @@ export default function RenewalForm({ user, onLogout }) {
                     </div>
 
                     <div style={{ fontSize: 13, fontWeight: 600, color: "#6b7280", margin: "20px 0 12px", paddingBottom: 6, borderBottom: "1px solid #e5e7eb" }}>
-                      Latest exam performance
+                      Last exam performance
                     </div>
                     <div className="form-row-2">
                       <div className="form-group">
                         <label>Marks / CGPA in Last Year Exam *</label>
-                        <input style={errorStyle("marks")} type="number" placeholder="Enter your latest marks %" value={academic.marks} onChange={e => setAcad("marks", e.target.value)} />
+                        <input style={errorStyle("marks")} type="number" placeholder="Enter your last marks %" value={academic.marks} onChange={e => setAcad("marks", e.target.value)} />
                       </div>
                     </div>
                   </>
@@ -644,15 +616,12 @@ export default function RenewalForm({ user, onLogout }) {
 
                     <div className="form-row-2">
                       <div className="form-group">
-                        <label>Board *</label>
-                        <select style={errorStyle("boardUniv")} value={academic.boardUniv} onChange={e => setAcad("boardUniv", e.target.value)}>
-                          <option value="">-- Select --</option>
-                          <option>CBSE</option><option>ICSE / ISC</option><option>State Board</option><option>IB</option><option>IGCSE</option><option>Other</option>
-                        </select>
+                        <label>Board</label>
+                        <input style={{ background: "#f3f4f6", color: "#6b7280", cursor: "not-allowed" }} type="text" value={academic.boardUniv} readOnly />
                       </div>
                       <div className="form-group">
-                        <label>State / UT *</label>
-                        <input style={errorStyle("schoolState")} type="text" value={academic.schoolState} onChange={e => setAcad("schoolState", e.target.value)} />
+                        <label>State / UT</label>
+                        <input style={{ background: "#f3f4f6", color: "#6b7280", cursor: "not-allowed" }} type="text" value={academic.schoolState} readOnly />
                       </div>
                     </div>
 
