@@ -1020,25 +1020,25 @@ export default function ApplicationForm({ user, onLogout }) {
                         <label style={{ fontWeight: 600 }}>{doc} {["Category Certificate", "Disability Certificate", "Bonafide Certificate", "Fee Receipts"].includes(doc) ? "" : "*"}</label>
                         <input type="file" onChange={(e) => handleFileUpload(e, doc)} style={{ marginTop: "8px" }} />
                         {fileObj?.status === "scanning" && (
-                          <div style={{ marginTop: 10, background: "#FEF9C3", border: "1px solid #FDE047", padding: "10px", borderRadius: "6px" }}>
-                            <div style={{ color: "#A16207", fontSize: "13px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
-                              <span style={{ display: "inline-block", width: 14, height: 14, border: "2px solid #A16207", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }}></span>
-                              Authenticating Document...
+                          <div style={{ marginTop: 10, background: "#F1F5F9", border: "1px solid #CBD5E1", padding: "10px", borderRadius: "6px" }}>
+                            <div style={{ color: "#334155", fontSize: "13px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                              <span style={{ display: "inline-block", width: 14, height: 14, border: "2px solid #3b82f6", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }}></span>
+                              AI Document Analysis...
                             </div>
-                            <div style={{ fontSize: "11px", color: "#854D0E", fontFamily: "monospace" }}>Establishing secure connection to Government DigiLocker...</div>
+                            <div style={{ fontSize: "11px", color: "#64748b", fontFamily: "monospace" }}>Running OCR and forensic integrity checks...</div>
                           </div>
                         )}
                         {fileObj?.status === "verified" && (
                           <div style={{ marginTop: 12, display: "flex", alignItems: "flex-start", gap: "12px", background: "#f0fdf4", padding: "10px", borderRadius: "6px", border: "1px solid #bbf7d0", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" }}>
                             {fileObj.url && <img src={fileObj.url} alt="Preview" style={{ width: 44, height: 44, objectFit: "cover", borderRadius: "4px", border: "1px solid #86efac" }} />}
                             <div style={{ flex: 1 }}>
-                              <div style={{ color: "#16a34a", fontSize: "13px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "4px" }}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                                Authenticated via DigiLocker
+                              <div style={{ color: "#16a34a", fontSize: "13px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "5px" }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                Document Authenticated
                               </div>
                               <div style={{ fontSize: "11px", color: "#475569", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "200px" }}>File: {fileObj.name}</div>
                               <div style={{ fontSize: "10px", color: "#64748b", marginTop: "4px", background: "#e2e8f0", padding: "2px 6px", borderRadius: "4px", display: "inline-block", fontFamily: "monospace" }}>
-                                UID: {Math.random().toString(36).substring(2, 10).toUpperCase()}-{Math.random().toString(10).substring(2, 6)}
+                                Verification ID: {Math.random().toString(36).substring(2, 10).toUpperCase()}-{Math.random().toString(10).substring(2, 6)}
                               </div>
                             </div>
                           </div>
