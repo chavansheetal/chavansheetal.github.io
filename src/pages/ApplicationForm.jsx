@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import Navbar from "./Navbar";
 import StudentSidebar from "./StudentSidebar";
 import { saveApplication, getApplicationsByUser, getUserByAppId } from "../store";
+import { analyzeDocument } from "../services/aiDocumentService";
 import "../styles/Dashboard.css";
 import "../styles/ApplicationForm.css";
 
@@ -328,15 +329,26 @@ export default function ApplicationForm({ user, onLogout }) {
       }
       set("files", { ...form.files, [docName]: { name: file.name, status: "scanning", url: fileUrl } });
       
-      // Mock verification delay since API Setu was removed
-      setTimeout(() => {
+      // Run AI Document Verification
+      analyzeDocument(file, docName, form).then((verificationResult) => {
+        if (!verificationResult.isValid) {
+          playErrorSound();
+          alert(`🔔 AI Scan Rejected: ${verificationResult.errorMsg}`);
+          setForm(prev => {
+            const updatedFiles = { ...prev.files };
+            delete updatedFiles[docName];
+            return { ...prev, files: updatedFiles };
+          });
+          return;
+        }
+
         setForm(prev => {
           if (prev.files[docName]?.name === file.name) {
-            return { ...prev, files: { ...prev.files, [docName]: { ...prev.files[docName], status: "verified", confidence: 96 } } };
+             return { ...prev, files: { ...prev.files, [docName]: { ...prev.files[docName], ...verificationResult } } };
           }
           return prev;
         });
-      }, 1500);
+      });
     }
   };
 
@@ -1034,11 +1046,19 @@ export default function ApplicationForm({ user, onLogout }) {
                             <div style={{ flex: 1 }}>
                               <div style={{ color: "#16a34a", fontSize: "13px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "5px" }}>
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                                Document Authenticated
+                                Document Authenticated (AI Confidence: {fileObj.confidence}%)
                               </div>
                               <div style={{ fontSize: "11px", color: "#475569", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "200px" }}>File: {fileObj.name}</div>
+                              {fileObj.extractedData && (
+                                <div style={{ fontSize: "10px", color: "#64748b", marginTop: "4px", background: "#e2e8f0", padding: "4px 6px", borderRadius: "4px", fontFamily: "monospace" }}>
+                                  <div style={{ fontWeight: 600, color: "#1e293b", marginBottom: 2 }}>Extracted Key Data:</div>
+                                  {Object.entries(fileObj.extractedData).map(([k, v]) => (
+                                    <div key={k}>{k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}: {v}</div>
+                                  ))}
+                                </div>
+                              )}
                               <div style={{ fontSize: "10px", color: "#64748b", marginTop: "4px", background: "#e2e8f0", padding: "2px 6px", borderRadius: "4px", display: "inline-block", fontFamily: "monospace" }}>
-                                Verification ID: {Math.random().toString(36).substring(2, 10).toUpperCase()}-{Math.random().toString(10).substring(2, 6)}
+                                Verification ID: {fileObj.verificationId || `${Math.random().toString(36).substring(2, 10).toUpperCase()}-${Math.random().toString(10).substring(2, 6)}`}
                               </div>
                             </div>
                           </div>
