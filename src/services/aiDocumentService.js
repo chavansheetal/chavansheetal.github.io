@@ -38,7 +38,47 @@ export const analyzeDocument = async (file, docType, userProfile = {}) => {
     };
   }
 
-  // 3. Simulate Successful OCR Extraction based on document type
+  // 3. Strict Content/Filename Matching (Simulating OCR Content Validation)
+  const docTypeLower = docType.toLowerCase();
+  let expectedKeywords = [];
+  
+  if (docTypeLower.includes("identity") || docTypeLower.includes("aadhaar") || docTypeLower.includes("residence")) {
+    expectedKeywords = ["aadhaar", "id", "pan", "passport", "voter", "identity", "proof"];
+  } else if (docTypeLower.includes("academic") || docTypeLower.includes("mark sheet") || docTypeLower.includes("records")) {
+    expectedKeywords = ["mark", "memo", "sslc", "puc", "10", "12", "degree", "academic", "transcript", "result"];
+  } else if (docTypeLower.includes("fee") || docTypeLower.includes("receipt")) {
+    expectedKeywords = ["fee", "receipt", "challan", "payment"];
+  } else if (docTypeLower.includes("bank") || docTypeLower.includes("passbook") || docTypeLower.includes("account")) {
+    expectedKeywords = ["bank", "passbook", "cheque", "statement", "account"];
+  } else if (docTypeLower.includes("bonafide")) {
+    expectedKeywords = ["bonafide", "certificate"];
+  } else if (docTypeLower.includes("income") || docTypeLower.includes("financial")) {
+    expectedKeywords = ["income", "financial", "salary", "certificate"];
+  } else if (docTypeLower.includes("photograph")) {
+    expectedKeywords = ["photo", "pic", "image", "passport_size"];
+  }
+
+  // If we have expected keywords for this category, the filename MUST contain at least one
+  if (expectedKeywords.length > 0) {
+    const isMatch = expectedKeywords.some(kw => fileName.includes(kw));
+    // Also fail if the user uploaded something meant for another category
+    // For example, if it's "Bank Passbook" but the filename says "Aadhaar"
+    let mismatchedCategory = false;
+    if (docTypeLower.includes("bank") && (fileName.includes("aadhaar") || fileName.includes("mark"))) mismatchedCategory = true;
+    if (docTypeLower.includes("academic") && (fileName.includes("aadhaar") || fileName.includes("bank") || fileName.includes("fee"))) mismatchedCategory = true;
+    if (docTypeLower.includes("fee") && (fileName.includes("mark") || fileName.includes("aadhaar") || fileName.includes("bank"))) mismatchedCategory = true;
+
+    if (!isMatch || mismatchedCategory) {
+       return {
+         isValid: false,
+         status: "rejected",
+         errorMsg: `Verification Failed: Content mismatch. You uploaded an invalid file for "${docType}". Please ensure you upload the correct document.`,
+         confidence: 15
+       };
+    }
+  }
+
+  // 4. Simulate Successful OCR Extraction based on document type
   let extractedData = {};
   
   if (docType.toLowerCase().includes("identity") || docType.toLowerCase().includes("aadhaar")) {
