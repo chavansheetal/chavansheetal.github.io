@@ -316,7 +316,8 @@ export default function AdminLogin({ onAdminLogin }) {
                 ⚠️ This section is for authorised institutes, state nodal officers, and ministry officials only.
               </div>
 
-              {/* Demo Credentials Box */}
+              {/* Demo Credentials Box - Hidden from UI for security, admins can refer to the CREDENTIALS constant at the top of this file */}
+              {/* 
               <div className="demo-creds-box">
                 <div className="demo-creds-title">🔑 Demo Credentials — {currentTab?.label}</div>
                 <div className="demo-creds-note">Copy and paste these into the fields below:</div>
@@ -337,6 +338,7 @@ export default function AdminLogin({ onAdminLogin }) {
                   💡 Click on any ID or Password above to auto-fill it
                 </div>
               </div>
+              */}
 
               {error && <div className="alert alert-error" style={{ marginBottom:12 }}>❌ {error}</div>}
 
