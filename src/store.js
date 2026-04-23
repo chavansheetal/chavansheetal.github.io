@@ -23,6 +23,51 @@ export function saveUser(user) {
   if (idx >= 0) users[idx] = { ...users[idx], ...user };
   else users.push(user);
   localStorage.setItem(STORE_KEYS.USERS, JSON.stringify(users));
+
+  // Sync profile edits to existing applications to be visible in admin dashboard
+  if (user.appId) {
+    let apps = JSON.parse(localStorage.getItem(STORE_KEYS.APPLICATIONS) || "[]");
+    let appsChanged = false;
+    apps = apps.map(app => {
+      // Find matching applications for this user
+      if (app.userId === user.appId || app.userId === user.id || app.userId === user.mobile || app.appId === user.appId) {
+        appsChanged = true;
+        // Merge the updated user profile into the existing application data
+        return {
+          ...app,
+          studentName: user.fullName || app.studentName,
+          personalDetails: {
+            ...app.personalDetails,
+            fullName: user.fullName || app.personalDetails?.fullName,
+            dob: user.dob || app.personalDetails?.dob,
+            gender: user.gender || app.personalDetails?.gender,
+            category: user.category || app.personalDetails?.category,
+            mobile: user.mobile || app.personalDetails?.mobile,
+            email: user.email || app.personalDetails?.email,
+            aadhaar: user.aadhaar || app.personalDetails?.aadhaar,
+          },
+          academicDetails: {
+            ...app.academicDetails,
+            instituteName: user.instituteName || app.academicDetails?.instituteName,
+            course: user.course || app.academicDetails?.course,
+            year: user.year || app.academicDetails?.year,
+            marks: user.marks || app.academicDetails?.marks,
+          },
+          bankDetails: {
+            ...app.bankDetails,
+            bankName: user.bankName || app.bankDetails?.bankName,
+            accountNo: user.accountNo || app.bankDetails?.accountNo,
+            ifsc: user.ifsc || app.bankDetails?.ifsc,
+            accountHolder: user.accountHolder || app.bankDetails?.accountHolder,
+          }
+        };
+      }
+      return app;
+    });
+    if (appsChanged) {
+      localStorage.setItem(STORE_KEYS.APPLICATIONS, JSON.stringify(apps));
+    }
+  }
 }
 
 export function getUserByAppId(appId) {
