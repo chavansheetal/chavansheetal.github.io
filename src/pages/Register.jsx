@@ -581,7 +581,7 @@ export default function Register({ onLogin }) {
                           />
                           <FErr field="fullName" />
                           <div style={{ fontSize: 10.5, color: "#718096", marginTop: 2 }}>
-                            Enter full name exactly as on your Aadhaar card (first + last name required)
+                            Full Name as on your Aadhaar card
                           </div>
                         </div>
 
@@ -597,17 +597,15 @@ export default function Register({ onLogin }) {
                             />
                             <FErr field="dob" />
                             <div style={{ fontSize: 10.5, color: "#718096", marginTop: 2 }}>
-                              {form.dob ? (
+                              {form.dob && (
                                 (() => {
                                   const dob = new Date(form.dob);
                                   const today = new Date();
                                   let age = today.getFullYear() - dob.getFullYear();
                                   const m = today.getMonth() - dob.getMonth();
                                   if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-                                  return `Age: ${age} years (Must be between 5 and 35 years)`;
+                                  return `Age: ${age} years`;
                                 })()
-                              ) : (
-                                "Age must be between 5 and 35 years"
                               )}
                             </div>
                           </div>
