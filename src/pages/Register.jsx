@@ -591,14 +591,25 @@ export default function Register({ onLogin }) {
                             <input
                               type="date"
                               value={form.dob}
-                              max={new Date(new Date().setFullYear(new Date().getFullYear() - 5)).toISOString().split("T")[0]}
-                              min={new Date(new Date().setFullYear(new Date().getFullYear() - 35)).toISOString().split("T")[0]}
                               onChange={e => set("dob", e.target.value)}
                               onBlur={() => handleBlur("dob")}
                               style={inputStyle("dob")}
                             />
                             <FErr field="dob" />
-                            <div style={{ fontSize: 10.5, color: "#718096", marginTop: 2 }}>Age must be between 5 and 35 years</div>
+                            <div style={{ fontSize: 10.5, color: "#718096", marginTop: 2 }}>
+                              {form.dob ? (
+                                (() => {
+                                  const dob = new Date(form.dob);
+                                  const today = new Date();
+                                  let age = today.getFullYear() - dob.getFullYear();
+                                  const m = today.getMonth() - dob.getMonth();
+                                  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+                                  return `Age: ${age} years (Must be between 5 and 35 years)`;
+                                })()
+                              ) : (
+                                "Age must be between 5 and 35 years"
+                              )}
+                            </div>
                           </div>
                           <div className="form-group">
                             <label>Gender *</label>
